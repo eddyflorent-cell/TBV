@@ -306,6 +306,17 @@
       background: rgba(255,255,255,.06);
     }
 
+
+    /* Drag & drop rééquilibrage (équipes) */
+    .teamList.dropHover{
+      outline: 2px dashed rgba(242,201,76,.75);
+      outline-offset: 6px;
+      border-radius: 14px;
+    }
+    .playerChip{ touch-action: pan-y; }
+    .playerChip[draggable="true"]{ cursor: grab; }
+    .playerChip.dragging{ opacity: .55; }
+
     @media (max-width: 600px){
       header .wrap{ padding: 10px 12px 12px !important; }
       .topbar{ flex-direction: column; align-items: stretch; gap: 10px; }
@@ -545,7 +556,7 @@
     <div class="hd">
       <div>
         <div class="title">Résultat</div>
-        <div class="sub">Chaque équipe affiche total/moyenne + compte (passeurs/libéros/grands + niveaux).</div>
+        <div class="sub">Chaque équipe affiche total/moyenne + compte (passeurs/libéros/grands + niveaux). Astuce : tu peux glisser-déposer un joueur sur un autre pour faire un swap et rééquilibrer à vue.</div>
       </div>
       <div class="row">
         <span class="chip"><span class="muted">Écart total</span> <b id="gapTotal">—</b></span>
@@ -1853,7 +1864,7 @@ function renderTeams(payload){
   gapAvg.textContent = gapA.toFixed(2);
 
   teamsEl.innerHTML = "";
-  teams.forEach((t)=>{
+  teams.forEach((t, ti)=>{
     const card = document.createElement("div");
     card.className = "teamCard";
     card.innerHTML = `
@@ -1875,7 +1886,7 @@ function renderTeams(payload){
           <span class="pill bad">Niv Début: <b>${t.counts.Débutant}</b></span>
         </div>
         <div class="hr"></div>
-        <div class="list"></div>
+        <div class="list teamList" data-team-index="${ti}"></div>
       </div>
     `;
     const list = card.querySelector(".list");
@@ -1886,6 +1897,9 @@ function renderTeams(payload){
         const p = o.p;
         const el = document.createElement("div");
         el.className = "playerChip";
+        el.draggable = true;
+        el.dataset.pid = String(p.id||"");
+        el.dataset.team = String(ti);
         el.innerHTML = `
           <div class="left">
             <div class="n">${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")}</div>
@@ -1902,6 +1916,127 @@ function renderTeams(payload){
   });
 
   seedLabel.textContent = String(SEED);
+  enableTeamsDnD(payload);
+}
+
+
+/** ---------------------------
+ *  DRAG & DROP (rééquilibrage manuel)
+ *  - Drag un joueur d'une équipe vers une autre
+ *  - Drop sur un joueur = SWAP (recommandé car les équipes sont pleines)
+ *  - Drop sur une zone vide = MOVE (si l'équipe a une place)
+ *  --------------------------- */
+let _dnd = { fromTeam: null, pid: null };
+
+function recomputeTeamStats(t){
+  t.total = 0;
+  t.counts = {tall:0,setter:0,libero:0, skill:0, Fort:0, Intermédiaire:0, Débutant:0};
+  for(const o of (t.players||[])){
+    t.total += Number(o.sc||0);
+    if(o.tall) t.counts.tall++;
+    if(o.isSetter) t.counts.setter++;
+    if(o.isLibero) t.counts.libero++;
+    if(o.isStrong) t.counts.skill++;
+    if(o.level==="Fort") t.counts.Fort++;
+    if(o.level==="Intermédiaire") t.counts.Intermédiaire++;
+    if(o.level==="Débutant") t.counts.Débutant++;
+  }
+  t.avg = (t.players && t.players.length) ? (t.total / t.players.length) : 0;
+  t.total = round2(t.total);
+  t.avg = round2(t.avg);
+}
+
+function findObjInTeam(team, pid){
+  return (team.players||[]).find(o => String(o?.p?.id||"") === String(pid));
+}
+
+function enableTeamsDnD(payload){
+  // active seulement si des équipes existent
+  if(!payload || !payload.teams) return;
+
+  const lists = document.querySelectorAll(".teamList");
+  lists.forEach(list=>{
+    list.addEventListener("dragover", (e)=>{ e.preventDefault(); list.classList.add("dropHover"); });
+    list.addEventListener("dragleave", ()=> list.classList.remove("dropHover"));
+    list.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      list.classList.remove("dropHover");
+
+      const toTeamIdx = Number(list.dataset.teamIndex);
+      if(!Number.isFinite(toTeamIdx)) return;
+
+      const fromTeamIdx = (_dnd.fromTeam!=null) ? Number(_dnd.fromTeam) : Number(e.dataTransfer.getData("text/fromTeam"));
+      const pid = _dnd.pid || e.dataTransfer.getData("text/pid");
+      if(fromTeamIdx==null || !pid) return;
+
+      if(!payload.teams[fromTeamIdx] || !payload.teams[toTeamIdx]) return;
+      if(fromTeamIdx === toTeamIdx) return;
+
+      const fromTeam = payload.teams[fromTeamIdx];
+      const toTeam = payload.teams[toTeamIdx];
+
+      const fromObj = findObjInTeam(fromTeam, pid);
+      if(!fromObj) return;
+
+      // Si on drop sur un joueur => swap
+      const chip = e.target.closest?.(".playerChip");
+      const targetPid = chip?.dataset?.pid;
+
+      if(targetPid){
+        const toObj = findObjInTeam(toTeam, targetPid);
+        if(!toObj) return;
+
+        // swap
+        const iA = fromTeam.players.indexOf(fromObj);
+        const iB = toTeam.players.indexOf(toObj);
+        if(iA<0 || iB<0) return;
+
+        fromTeam.players[iA] = toObj;
+        toTeam.players[iB] = fromObj;
+
+        recomputeTeamStats(fromTeam);
+        recomputeTeamStats(toTeam);
+        renderTeams(payload);
+        showToast("Swap effectué ✅");
+        return;
+      }
+
+      // sinon: move si place dispo
+      if((toTeam.players||[]).length >= Number(toTeam.target||0)){
+        showToast("Équipe pleine: dépose sur un joueur pour faire un swap.");
+        return;
+      }
+
+      fromTeam.players = fromTeam.players.filter(o => o !== fromObj);
+      toTeam.players.push(fromObj);
+
+      recomputeTeamStats(fromTeam);
+      recomputeTeamStats(toTeam);
+      renderTeams(payload);
+      showToast("Joueur déplacé ✅");
+    });
+  });
+
+  const chips = document.querySelectorAll(".playerChip[draggable='true'], .playerChip");
+  chips.forEach(ch=>{
+    ch.setAttribute("draggable","true");
+    ch.addEventListener("dragstart", (e)=>{
+      const pid = ch.dataset.pid;
+      const team = ch.dataset.team;
+      _dnd = { fromTeam: team, pid };
+      try{
+        e.dataTransfer.setData("text/pid", pid);
+        e.dataTransfer.setData("text/fromTeam", team);
+        e.dataTransfer.effectAllowed = "move";
+      }catch{}
+      ch.classList.add("dragging");
+    });
+    ch.addEventListener("dragend", ()=>{
+      ch.classList.remove("dragging");
+      _dnd = { fromTeam: null, pid: null };
+      document.querySelectorAll(".teamList.dropHover").forEach(x=>x.classList.remove("dropHover"));
+    });
+  });
 }
 
 /** ---------------------------

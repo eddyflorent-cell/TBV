@@ -1,5 +1,5 @@
 /* TBV PWA Service Worker (simple) */
-const CACHE_NAME = "tbv-v4-pwa-1";
+const CACHE_NAME = "tbv-v4-pwa-2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
