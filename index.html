@@ -199,7 +199,28 @@
       border:1px solid rgba(255,255,255,.20);
       border-radius:14px;
       background: rgba(255,255,255,.04);
+      transition: opacity .15s, transform .15s, border-color .15s;
     }
+    .playerChip[draggable="true"]{ cursor: grab; }
+    .playerChip[draggable="true"]:active{ cursor: grabbing; }
+    .playerChip.dragging{ opacity:.35; transform:scale(.97); }
+    .drag-handle{ font-size:14px; color:var(--muted); padding-right:4px; user-select:none; flex-shrink:0; }
+    .touch-ghost{
+      position:fixed; z-index:99999; pointer-events:none;
+      opacity:.85; transform:scale(1.04) rotate(1.5deg);
+      box-shadow: 0 8px 30px rgba(0,0,0,.5);
+      background: var(--card,#1e2430); border:1px solid var(--accent,#63b3ff);
+      border-radius:14px; padding:10px 14px;
+      font-size:13px; color:#fff; white-space:nowrap;
+      transition: none;
+    }
+    .teamCard.drag-over .list{
+      outline: 2px dashed var(--accent);
+      outline-offset: 4px;
+      border-radius: 10px;
+      background: rgba(99,179,255,.06);
+    }
+    .teamCard.drag-over{ border-color: var(--accent); }
     .playerChip .left{display:flex;flex-direction:column}
     .playerChip .left .n{font-weight:850}
     .playerChip .left .m{font-size:12px;color:var(--muted)}
@@ -306,17 +327,6 @@
       background: rgba(255,255,255,.06);
     }
 
-
-    /* Drag & drop rééquilibrage (équipes) */
-    .teamList.dropHover{
-      outline: 2px dashed rgba(242,201,76,.75);
-      outline-offset: 6px;
-      border-radius: 14px;
-    }
-    .playerChip{ touch-action: pan-y; }
-    .playerChip[draggable="true"]{ cursor: grab; }
-    .playerChip.dragging{ opacity: .55; }
-
     @media (max-width: 600px){
       header .wrap{ padding: 10px 12px 12px !important; }
       .topbar{ flex-direction: column; align-items: stretch; gap: 10px; }
@@ -338,6 +348,112 @@
     @media (max-width: 600px){
       #playerOverlay .rateFooter{display:none;}
       #playerOverlay .rateHeader .row{gap:8px}
+    }
+
+    /* ═══════════════════════════════════════════
+       HISTORIQUE
+    ═══════════════════════════════════════════ */
+    .history-item{
+      border:1px solid var(--line); border-radius:14px;
+      padding:14px; display:flex; align-items:center; gap:12px;
+      background:rgba(255,255,255,.03);
+    }
+    .history-item-info{ flex:1; }
+    .history-item-date{ font-weight:700; font-size:14px; }
+    .history-item-meta{ font-size:12px; color:var(--muted); margin-top:3px; }
+    .history-item-teams{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .history-team-pill{
+      font-size:11px; padding:2px 8px; border-radius:999px;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+    }
+
+    /* ═══════════════════════════════════════════
+       MODE TERRAIN
+    ═══════════════════════════════════════════ */
+    #terrainOverlay{
+      display:none; position:fixed; inset:0; z-index:9000;
+      background:var(--bg); overflow:hidden;
+    }
+    #terrainOverlay.active{ display:flex; flex-direction:column; }
+
+    .terrain-hint{
+      text-align:center; font-size:11px; color:var(--muted);
+      padding:6px 0 2px; letter-spacing:.05em; flex-shrink:0;
+    }
+    .terrain-hint span{ opacity:.5; }
+
+    .terrain-slider{
+      flex:1; display:flex; overflow:hidden; position:relative;
+    }
+    .terrain-slide{
+      min-width:100%; height:100%;
+      display:flex; flex-direction:column;
+      padding:16px 14px 20px;
+      box-sizing:border-box;
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    .terrain-team-name{
+      font-size:clamp(32px,10vw,56px); font-weight:900;
+      letter-spacing:-.02em; line-height:1;
+      margin-bottom:4px;
+    }
+    .terrain-team-count{
+      font-size:14px; color:var(--muted); margin-bottom:16px;
+    }
+    .terrain-players{ display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; }
+    .terrain-player{
+      display:flex; align-items:center; gap:12px;
+      padding:12px 16px;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .terrain-player-name{ font-size:17px; font-weight:700; flex:1; }
+    .terrain-player-poste{
+      font-size:12px; color:var(--muted);
+      background:rgba(255,255,255,.08);
+      padding:3px 9px; border-radius:999px;
+      white-space:nowrap;
+    }
+    .terrain-player-level{
+      font-size:11px; padding:2px 8px; border-radius:999px; font-weight:600;
+    }
+    .terrain-player-level.fort{ background:rgba(47,128,237,.25); color:#63b3ff; }
+    .terrain-player-level.inter{ background:rgba(242,201,76,.2); color:#f2c94c; }
+    .terrain-player-level.deb{ background:rgba(187,107,217,.2); color:#bb6bd9; }
+
+    .terrain-dots{
+      display:flex; justify-content:center; gap:8px;
+      padding:10px 0 6px; flex-shrink:0;
+    }
+    .terrain-dot{
+      width:8px; height:8px; border-radius:50%;
+      background:rgba(255,255,255,.2);
+      transition:background .2s, transform .2s;
+    }
+    .terrain-dot.active{ background:var(--accent); transform:scale(1.3); }
+
+    .terrain-close{
+      position:absolute; top:14px; right:14px;
+      background:rgba(255,255,255,.08); border:none; border-radius:999px;
+      color:var(--txt); font-size:18px; width:36px; height:36px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      z-index:10;
+    }
+
+    /* Couleurs par équipe */
+    .terrain-slide[data-team="A"] .terrain-team-name{ color:#ff6a3d; }
+    .terrain-slide[data-team="B"] .terrain-team-name{ color:#63b3ff; }
+    .terrain-slide[data-team="C"] .terrain-team-name{ color:#2ecc71; }
+    .terrain-slide[data-team="D"] .terrain-team-name{ color:#f2c94c; }
+    .terrain-slide[data-team="E"] .terrain-team-name{ color:#bb6bd9; }
+    .terrain-slide[data-team="F"] .terrain-team-name{ color:#ff9f43; }
+
+    /* Swipe hint sur la vue équipes */
+    .swipe-hint{
+      text-align:center; font-size:12px; color:var(--muted);
+      padding:8px 0 0; user-select:none; pointer-events:none;
+      opacity:.7;
     }
 </style>
 </head>
@@ -517,13 +633,19 @@
                 <input type="checkbox" id="cTall" checked /> Équilibrer les grands
               </label>
               <label class="chip" style="cursor:pointer">
-                <input type="checkbox" id="cSetter" checked /> Limiter passeurs/équipe
+                <input type="checkbox" id="cSetter" checked /> 1 passeur obligatoire/équipe
               </label>
               <label class="chip" style="cursor:pointer">
                 <input type="checkbox" id="cLibero" checked /> Limiter libéros/équipe
               </label>
               <label class="chip" style="cursor:pointer">
                 <input type="checkbox" id="cLevels" checked /> Équilibrer les niveaux
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cBeg1" checked /> Au moins 1 débutant / équipe
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cAttFort" checked /> 1 attaquant fort/équipe
               </label>
 
               <button class="btn small" id="btnSkillConstraints" type="button">Contraintes compétences</button>
@@ -556,7 +678,7 @@
     <div class="hd">
       <div>
         <div class="title">Résultat</div>
-        <div class="sub">Chaque équipe affiche total/moyenne + compte (passeurs/libéros/grands + niveaux). Astuce : tu peux glisser-déposer un joueur sur un autre pour faire un swap et rééquilibrer à vue.</div>
+        <div class="sub">Chaque équipe affiche total/moyenne + compte (passeurs/libéros/grands + niveaux).</div>
       </div>
       <div class="row">
         <span class="chip"><span class="muted">Écart total</span> <b id="gapTotal">—</b></span>
@@ -565,6 +687,10 @@
     </div>
     <div class="bd">
       <div class="teams" id="teams"></div>
+      <div class="swipe-hint" id="swipeHint" style="display:none">↑ Swipe vers le haut pour le mode terrain</div>
+      <div id="shareRow" style="display:none; margin-top:10px; text-align:center;">
+        <button class="btn small" id="btnShare" type="button">📤 Partager les équipes</button>
+      </div>
     </div>
   </div>
 </div>
@@ -574,6 +700,8 @@
     <div class="hint" id="footerHint">✅ Coche tes présents → Choisis profil + format → Génère.</div>
     <div class="row">
       <button class="btn small blue" id="btnGroups" type="button">Groupes</button>
+      <button class="btn small" id="btnHistory" type="button">📋 Historique</button>
+      <button class="btn small" id="btnIncompat" type="button">🚫 Incompatibilités</button>
       <button class="btn small ok" id="btnSaveLocal" type="button">Sauver (local)</button>
       <button class="btn small" id="btnLoadLocal" type="button">Charger (local)</button>
     </div>
@@ -965,6 +1093,18 @@
         </div>
 
         <div class="hr"></div>
+        <div>
+          <label>Ne joue pas avec <span class="muted" style="font-weight:400;font-size:11px">(contrainte dure)</span></label>
+          <div id="incompatSearch" style="position:relative;margin-bottom:8px">
+            <input id="incompatInput" placeholder="Chercher un joueur à exclure…" autocomplete="off"
+              style="width:100%;box-sizing:border-box" />
+            <div id="incompatDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;
+              background:var(--card);border:1px solid var(--line);border-radius:10px;max-height:180px;overflow-y:auto;margin-top:2px"></div>
+          </div>
+          <div id="incompatList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:24px"></div>
+        </div>
+
+        <div class="hr"></div>
         <div class="hint">
           Notes (10 critères) : initialisées à <b>6/10</b>. Tu ajustes ensuite via “Noter”.
         </div>
@@ -1068,7 +1208,9 @@
  *   levelManual: "auto" | "Fort" | "Intermédiaire" | "Débutant"
  * }
  */
-const KEY_LOCAL = "team_balancer_volley_v4";
+const KEY_LOCAL   = "team_balancer_volley_v4";
+const KEY_HISTORY = "team_balancer_history_v1";
+const MAX_HISTORY = 5;
 let SEED = 1;
 
 const CRIT_KEYS = ["service","reception","passe","attaque","bloc","defense","relance","placement","mental","physique"];
@@ -1107,6 +1249,7 @@ const defaultPlayers = [
 let state = {
   players: structuredClone(defaultPlayers),
   lastTeams: null,
+  manualDragDone: false,
   skillConstraint: null,
   groups: []
 };
@@ -1229,6 +1372,8 @@ const cTall = $("cTall");
 const cSetter = $("cSetter");
 const cLibero = $("cLibero");
 const cLevels = $("cLevels");
+const cBeg1 = $("cBeg1");
+const cAttFort = $("cAttFort");
 const tallThreshold = $("tallThreshold");
 
 const btnGenerate = $("btnGenerate");
@@ -1262,12 +1407,41 @@ const fileInputCSV = $("fileInputCSV");
 /** ---------------------------
  *  UTILITIES
  *  --------------------------- */
-function showToast(msg){
-  toast.textContent = msg;
-  toast.classList.remove("hidden");
+function showToast(msg, type){
+  const div = document.createElement("div");
+  div.style.cssText = [
+    "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);",
+    "z-index:9999;padding:10px 16px;border-radius:8px;color:#fff;",
+    "font-size:14px;max-width:90%;text-align:center;",
+    "box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;",
+    "background:" + (type==="bad"||type==="error" ? "#e74c3c"
+      : type==="ok"||type==="success" ? "#27ae60"
+      : type==="warn" ? "#e67e22"
+      : "#34495e") + ";"
+  ].join("");
+  div.textContent = msg;
+  document.body.appendChild(div);
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(()=>toast.classList.add("hidden"), 2600);
+  showToast._t = setTimeout(()=>{
+    div.style.opacity="0";
+    setTimeout(()=>div.remove(), 300);
+  }, 2600);
 }
+
+
+// PWA-safe confirm() replacement
+function pwaConfirm(msg, onYes){
+  const el = document.getElementById("tbvConfirm");
+  document.getElementById("tbvConfirmMsg").textContent = msg;
+  el.style.display = "flex";
+  const yes = document.getElementById("tbvConfirmYes");
+  const no  = document.getElementById("tbvConfirmNo");
+  function cleanup(){ el.style.display = "none"; yes.onclick = null; no.onclick = null; }
+  yes.onclick = ()=>{ cleanup(); onYes(); };
+  no.onclick  = ()=>{ cleanup(); };
+}
+
+
 function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
@@ -1301,6 +1475,7 @@ function ensurePlayerShape(p){
   if(typeof p.comment !== "string") p.comment = "";
   if(typeof p.played !== "number" || !Number.isFinite(p.played)) p.played = 0;
   if(!p.levelManual) p.levelManual = "auto";
+  if(!Array.isArray(p.incompatibles)) p.incompatibles = [];
   return p;
 }
 function normalizeName(s){
@@ -1658,385 +1833,621 @@ function snakeOrder(n){
   const down = Array.from({length:n}, (_,i)=>n-1-i);
   return up.concat(down);
 }
+// showToast() gère tous les toasts (défini plus haut)
+
+function saveAll(){
+  try{ localStorage.setItem(KEY_LOCAL, JSON.stringify({ state, weights })); }catch(e){ console.warn('saveAll:', e); }
+}
 
 function generateTeams(){
-  const sizes = getTeamSizes();
-  if(!sizes){
-    showToast("Format invalide. Choisis un format ou saisis des tailles ex: 3,3,3,3,4");
-    return;
-  }
-
-  const profileKey = profileSel.value;
-  const mode = modeSel.value;
-  const tallCut = Number(tallThreshold.value || 185);
-
-  const allowNonActif = (filterStatus.value === "Tous");
-  let poolAll = state.players.filter(p => p.present && (allowNonActif || p.statut==="Actif"));
-  if(poolAll.length === 0){
-    showToast("Aucun joueur présent.");
-    return;
-  }
-
-  const needed = sizes.reduce((a,b)=>a+b,0);
-  if(poolAll.length < needed){
-    showToast(`Pas assez de présents: ${poolAll.length} / ${needed} nécessaires.`);
-    return;
-  }
-
-  // --- surplus policy ---
-  let pool = poolAll.slice();
-  const policy = surplusPolicy.value || "rotate";
-
-  if(pool.length > needed){
-    const withScore = pool.map(p=>({p, sc: scorePlayer(p, profileKey)}));
-
-    if(policy === "top"){
-      pool = withScore.sort((a,b)=>b.sc-a.sc).slice(0, needed).map(x=>x.p);
-      showToast(`Surplus: “Meilleurs scores” (${needed} joueurs).`);
-    } else if(policy === "random"){
-      pool = seededShuffle(pool, SEED).slice(0, needed);
-      showToast(`Surplus: “Aléatoire” (${needed} joueurs).`);
-    } else if(policy === "first"){
-      pool = poolAll.slice(0, needed);
-      showToast(`Surplus: “Premiers cochés” (${needed} joueurs).`);
-    } else {
-      const shuffled = seededShuffle(withScore, SEED);
-      pool = shuffled
-        .sort((a,b)=>{
-          const pa = Number(a.p.played||0), pb = Number(b.p.played||0);
-          if(pa !== pb) return pa - pb;
-          return b.sc - a.sc;
-        })
-        .slice(0, needed)
-        .map(x=>x.p);
-      showToast(`Surplus: rotation équitable (${needed} joueurs). Pense à “Valider cette rotation”.`);
-    }
-  }
-
-  // build objects
-  let arr = pool.map(p=>{
-    const lvl = getPlayerLevel(p);
-    return {
-      p,
-      sc: scorePlayer(p, profileKey),
-      tall: (p.taille >= tallCut),
-      isSetter: (normalizeName(p.poste)==="passeur"),
-      isLibero: (normalizeName(p.poste)==="libero" || normalizeName(p.poste)==="libéro"),
-      level: lvl,
-      isStrong: (() => {
-        const scC = state.skillConstraint;
-        if(!scC) return false;
-        const v = Number(p.notes?.[scC.key] ?? 0);
-        return v >= Number(scC.threshold || 8);
-      })()
-    };
-  });
-
-  // totals by level for target distribution
-  const totalF = arr.filter(o=>o.level==="Fort").length;
-  const totalI = arr.filter(o=>o.level==="Intermédiaire").length;
-  const totalB = arr.filter(o=>o.level==="Débutant").length;
-
-  const teams = sizes.map((size, i)=>({
-    name: `Équipe ${String.fromCharCode(65+i)}`,
-    target: size,
-    players: [],
-    total: 0,
-    avg: 0,
-    counts: {tall:0,setter:0,libero:0, skill:0, Fort:0, Intermédiaire:0, Débutant:0}
-  }));
-
-  // sort by score (with seed shuffle)
-  arr = seededShuffle(arr, SEED).sort((a,b)=> b.sc - a.sc);
-
-  const maxSetter = cSetter.checked ? 1 : 99;
-  const maxLibero = cLibero.checked ? 1 : 99;
-
-  function fits(t, o){
-    const scC = state.skillConstraint;
-    if(scC && o.isStrong && scC.hard){
-      if(t.counts.skill >= Number(scC.maxPerTeam || 0)) return false;
-    }
-    if(cSetter.checked && o.isSetter && t.counts.setter >= maxSetter) return false;
-    if(cLibero.checked && o.isLibero && t.counts.libero >= maxLibero) return false;
-    return true;
-  }
-
-  function levelPenalty(t, o){
-    if(!cLevels.checked) return 0;
-    const nTeams = teams.length || 1;
-    const targetF = totalF / nTeams;
-    const targetI = totalI / nTeams;
-    const targetB = totalB / nTeams;
-    const nextF = t.counts.Fort + (o.level==="Fort" ? 1 : 0);
-    const nextI = t.counts.Intermédiaire + (o.level==="Intermédiaire" ? 1 : 0);
-    const nextB = t.counts.Débutant + (o.level==="Débutant" ? 1 : 0);
-    // poids un peu fort pour éviter "1 équipe full forts"
-    return (
-      Math.abs(nextF - targetF) * 1.2 +
-      Math.abs(nextI - targetI) * 0.8 +
-      Math.abs(nextB - targetB) * 1.0
-    );
-  }
-
-  function pickTeamFor(o, idx){
-    const openTeams = teams.filter(t=>t.players.length < t.target);
-    if(openTeams.length===0) return null;
-
-    if(mode === "roundrobin"){
-      for(let k=0;k<teams.length;k++){
-        const t = teams[(idx+k)%teams.length];
-        if(t.players.length < t.target && fits(t,o)) return t;
-      }
-      if(state.skillConstraint?.hard) return null;
-      return openTeams[0];
-    }
-
-    const order = snakeOrder(teams.length);
-    const ti = order[idx % order.length];
-    const t0 = teams[ti];
-    if(t0 && t0.players.length < t0.target && fits(t0,o)) return t0;
-
-    const meanTarget = (teams.reduce((s,t)=>s+t.total,0) + o.sc) / teams.length;
-
-    let best=null, bestCost=Infinity;
-    for(const t of openTeams){
-      if(!fits(t,o)) continue;
-
-      const cost =
-        Math.abs((t.total + o.sc) - meanTarget)
-        + (cTall.checked ? (t.counts.tall + (o.tall?1:0)) * 0.35 : 0)
-        + (o.isSetter ? (t.counts.setter*1.2) : 0)
-        + (o.isLibero ? (t.counts.libero*1.2) : 0)
-        + (o.isStrong ? (t.counts.skill*1.2) : 0)
-        + levelPenalty(t,o);
-
-      if(cost < bestCost){
-        bestCost=cost; best=t;
-      }
-    }
-    if(best) return best;
-    if(state.skillConstraint?.hard) return null;
-    return openTeams.sort((a,b)=>a.total-b.total)[0];
-  }
-
-  for(let idx=0; idx<arr.length; idx++){
-    const o = arr[idx];
-    const t = pickTeamFor(o, idx);
-    if(!t){
-      showToast("Impossible de respecter les contraintes strictes. Assouplis (max/threshold) ou désactive 'strict'.");
+  try{
+    const teamSizes = getTeamSizes(); // array, e.g. [6,6] or custom
+    if(!Array.isArray(teamSizes) || teamSizes.length < 2){
+      showToast("Choisis un format d'équipes valide.", "warn");
       return;
     }
-    t.players.push(o);
-    t.total += o.sc;
-    if(o.tall) t.counts.tall++;
-    if(o.isSetter) t.counts.setter++;
-    if(o.isLibero) t.counts.libero++;
-    if(o.isStrong) t.counts.skill++;
-    if(o.level==="Fort") t.counts.Fort++;
-    if(o.level==="Intermédiaire") t.counts.Intermédiaire++;
-    if(o.level==="Débutant") t.counts.Débutant++;
+    const numTeams = teamSizes.length;
+    const needed = teamSizes.reduce((a,b)=>a+Number(b||0),0);
+
+    // Base pool = présents + filtres UI (club / statut)
+    const poolAll = state.players.slice();
+
+    const statutFilter = (filterStatus?.value || "Tous");
+    const clubFilter = String(filterClub?.value || "").trim();
+
+    let base = poolAll.filter(p=>{
+      if(!p) return false;
+      if(p.present !== true) return false;
+      if(statutFilter !== "Tous" && String(p.statut||"").toLowerCase() !== String(statutFilter).toLowerCase()) return false;
+      if(clubFilter && clubFilter.toLowerCase() !== "tous" && !playerHasClub(p, clubFilter)) return false;
+      return true;
+    });
+
+    if(base.length < 2){
+      showToast("Pas assez de joueurs présents après filtres.", "warn");
+      renderTeams({teams:[], bench:[], teamSizes});
+      return;
+    }
+
+    // Surplus policy: reduce to 'needed' if too many players
+    let selected = base.slice();
+    let benchPlayers = [];
+    if(needed > 0 && selected.length > needed){
+      const policy = String(surplusPolicy?.value || "rotate");
+      if(policy === "top"){
+        selected.sort((a,b)=> scorePlayer(b, profileSel.value) - scorePlayer(a, profileSel.value));
+      }else if(policy === "random"){
+        selected.sort(()=> Math.random()-0.5);
+      }else if(policy === "first"){
+        // keep current order
+      }else{
+        // rotate (default): players who played last time go after
+        const last = new Set(state.lastSelectedIds || []);
+        selected.sort((a,b)=>{
+          const pa = last.has(a.id) ? 1 : 0;
+          const pb = last.has(b.id) ? 1 : 0;
+          if(pa !== pb) return pa - pb;
+          return scorePlayer(b, profileSel.value) - scorePlayer(a, profileSel.value);
+        });
+      }
+      benchPlayers = selected.slice(needed);
+      selected = selected.slice(0, needed);
+    }
+    state.lastSelectedIds = selected.map(p=>p.id);
+    saveAll();
+
+    // Constraints toggles
+    const cTall = !!(document.getElementById("cTall")?.checked);
+    const cSetter = !!(document.getElementById("cSetter")?.checked);
+    const cLibero = !!(document.getElementById("cLibero")?.checked);
+    const cMin1Beg = !!(document.getElementById("cBeg1")?.checked);
+    const cAttFort = !!(document.getElementById("cAttFort")?.checked);
+
+    const tallThreshold = Number(document.getElementById("tallThreshold")?.value || 185);
+
+    const isSetter = p => String(p.poste||"").toLowerCase() === "passeur";
+
+    const isLibero = p => String(p.poste||"").toLowerCase().includes("lib");
+    const isTall = p => Number(p.taille||0) >= tallThreshold;
+    const getLevel = p => getPlayerLevel(p); // "débutant" | "intermediaire" | "fort"
+    const scoreOf = p => scorePlayer(p, profileSel.value);
+
+    // Role counts => max per team
+    const setters = selected.filter(isSetter).length;
+    const liberos = selected.filter(isLibero).length;
+    const talls = selected.filter(isTall).length;
+
+    // maxSetter: Infinity because the "1 setter per team" rule is enforced by pre-assignment
+    // canAdd must NOT block remaining setters from filling empty spots
+    const maxSetter = Infinity;
+    const maxLibero = cLibero ? Math.ceil(liberos / numTeams) : Infinity;
+    const maxTall = cTall ? Math.ceil(talls / numTeams) : Infinity;
+
+    // Teams init
+    const teams = Array.from({length:numTeams}, (_,i)=>({
+      name: String.fromCharCode(65+i),
+      players: [],
+      total: 0,
+      avg: 0,
+      target: 0,
+      counts: {tall:0, setter:0, libero:0, skill:0, "Débutant":0, "Intermédiaire":0, "Fort":0}
+    }));
+
+    teams.forEach((t,i)=>{ t.target = Number(teamSizes[i]||0); });
+    const teamIndex = t => teams.indexOf(t);
+
+    const canAdd = (team, p)=>{
+      const idx = teamIndex(team);
+      if(idx < 0) return false;
+      if(team.players.length >= Number(teamSizes[idx]||0)) return false;
+      if(cSetter && isSetter(p) && team.counts.setter >= maxSetter) return false;
+      if(cLibero && isLibero(p) && team.counts.libero >= maxLibero) return false;
+      if(cTall && isTall(p) && team.counts.tall >= maxTall) return false;
+      // Contrainte dure incompatibilité
+      const incompat = Array.isArray(p.incompatibles) ? p.incompatibles : [];
+      if(incompat.length && team.players.some(o => incompat.includes(o.p.id))) return false;
+      // Réciprocité : vérifier si un joueur déjà dans l'équipe a p dans ses incompatibles
+      if(team.players.some(o => Array.isArray(o.p.incompatibles) && o.p.incompatibles.includes(p.id))) return false;
+      return true;
+    };
+
+    const addToTeam = (team, p)=>{
+      const sc = scoreOf(p);
+      const level = getLevel(p);
+      team.players.push({p, sc, level});
+      team.total += sc;
+
+      if(isTall(p)) team.counts.tall++;
+      if(isSetter(p)) team.counts.setter++;
+      if(isLibero(p)) team.counts.libero++;
+
+      const lnorm = level.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+      if(lnorm === "debutant") team.counts["Débutant"]++;
+      else if(lnorm === "intermediaire") team.counts["Intermédiaire"]++;
+      else if(lnorm === "fort") team.counts["Fort"]++;
+    };
+
+    // ================================================================
+    // PRÉ-ASSIGNATION ORCHESTRÉE
+    // Principe : pour chaque équipe éligible, on assigne dans l'ordre :
+    //   1. 1 joueur faible (deb ou inter bas) — équipes éligibles seulement
+    //   2. 1 passeur (Fort si équipe avec deb, Inter sinon)
+    //   3. 1 attaquant fort (Fort si équipe avec deb, Inter sinon)
+    // On travaille avec un Set d'IDs déjà assignés pour éviter tout doublon.
+    // ================================================================
+    {
+      const maxTSz = Math.max(...teamSizes.map(Number));
+      const eligible = teams.filter((_,i) => Number(teamSizes[i]||0) === maxTSz);
+      const pool = eligible.length > 0 ? eligible : teams;
+
+      const assigned = new Set(); // IDs déjà pré-assignés
+
+      const lvl = p => getLevel(p).toLowerCase().replace("é","e");
+      const isFort  = p => lvl(p) === "fort";
+      const isInter = p => lvl(p) === "intermediaire";
+      const isDeb   = p => lvl(p) === "debutant" || getLevel(p).toLowerCase() === "débutant";
+
+      // Prend le premier joueur disponible d'une liste (non encore assigné)
+      const pick = (list) => list.find(p => !assigned.has(p.id)) || null;
+
+      // Assigne un joueur à une équipe cible (ou la première qui peut l'accueillir)
+      const doAssign = (p, preferredTeam) => {
+        if(!p || assigned.has(p.id)) return;
+        assigned.add(p.id);
+        selected = selected.filter(x => x.id !== p.id);
+        if(preferredTeam && canAdd(preferredTeam, p)){
+          addToTeam(preferredTeam, p);
+        } else {
+          const alt = pool.find(t => canAdd(t, p));
+          if(alt) addToTeam(alt, p); else benchPlayers.push(p);
+        }
+      };
+
+      // ─── Listes source (dans selected complet, filtrées par rôle/niveau) ──
+      const debs   = selected.filter(isDeb).sort((a,b) => scoreOf(a)-scoreOf(b));
+      const inters = selected.filter(p => isInter(p) && !isSetter(p)).sort((a,b) => scoreOf(a)-scoreOf(b));
+
+      const setFort  = selected.filter(p => isSetter(p) && isFort(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+      const setInter = selected.filter(p => isSetter(p) && isInter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+      const setOther = selected.filter(p => isSetter(p) && !isFort(p) && !isInter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+
+      const attFort  = selected.filter(p => isFort(p)  && !isSetter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+      const attInter = selected.filter(p => isInter(p) && !isSetter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+
+      // ─── ÉTAPE 1 : joueurs faibles (1 par équipe éligible) ────────────────
+      // Constitue la liste des joueurs faibles à distribuer
+      const weakList = [];
+      if(cMin1Beg){
+        debs.forEach(p => weakList.push(p));
+        if(weakList.length < pool.length){
+          inters.forEach(p => { if(weakList.length < pool.length) weakList.push(p); });
+        }
+      }
+
+      // Assigne 1 joueur faible par équipe éligible
+      pool.forEach((team, i) => {
+        if(cMin1Beg && weakList[i]) doAssign(weakList[i], team);
+      });
+
+      // Marque les équipes qui ont reçu un deb (→ "équipe faible" → reçoit Fort)
+      const teamHasDeb = t => t.players.some(o => isDeb(o.p));
+
+      // ─── ÉTAPE 2 : passeurs (1 par équipe éligible) ───────────────────────
+      if(cSetter){
+        pool.forEach(team => {
+          let p;
+          if(teamHasDeb(team)){
+            // Équipe avec deb → passeur Fort en priorité
+            p = pick(setFort) || pick(setOther) || pick(setInter);
+          } else {
+            // Équipe sans deb → passeur Inter en priorité
+            p = pick(setInter) || pick(setOther) || pick(setFort);
+          }
+          doAssign(p, team);
+        });
+
+        const totalSetters = setFort.length + setInter.length + setOther.length;
+        if(totalSetters < pool.length){
+          showToast(`⚠️ Seulement ${totalSetters} passeur(s) pour ${pool.length} équipes.`, "warn");
+        }
+      }
+
+      // ─── ÉTAPE 3 : attaquants (1 par équipe éligible) ────────────────────
+      if(cAttFort){
+        pool.forEach(team => {
+          let p;
+          if(teamHasDeb(team)){
+            // Équipe avec deb → attaquant Fort en priorité
+            p = pick(attFort) || pick(attInter);
+          } else {
+            // Équipe sans deb → attaquant Inter en priorité
+            p = pick(attInter) || pick(attFort);
+          }
+          doAssign(p, team);
+        });
+
+        if((attFort.length + attInter.length) < pool.length){
+          showToast(`⚠️ Pas assez d'attaquants fort/inter pour ${pool.length} équipes.`, "warn");
+        }
+      }
+
+      // Toast récap fallback
+      if(cMin1Beg){
+        const nbDeb = weakList.filter(isDeb).length;
+        const nbInter = weakList.filter(isInter).length;
+        if(nbInter > 0){
+          showToast(`⚠️ ${nbDeb} deb. + ${nbInter} inter. faible(s) répartis (1/équipe éligible).`, "warn");
+        }
+      }
+    }
+
+    // ── Remplissage restant : serpentin pondéré par total ──────────────
+    // Si "Équilibrer les niveaux" activé → serpentin strict (minimise l'écart de total)
+    // Sinon → greedy (équipe avec total le plus bas en premier, comme avant)
+    const cLevels = !!(document.getElementById("cLevels")?.checked);
+
+    selected.sort((a,b)=> scoreOf(b)-scoreOf(a)); // forts en premier
+
+    if(cLevels){
+      // Serpentin : 1→2→3→4→4→3→2→1→1→...
+      // On distribue par passes. Chaque passe = 1 joueur par équipe dans l'ordre croissant
+      // puis décroissant (zigzag), mais on choisit toujours l'équipe avec le total le plus bas
+      // parmi les éligibles pour ne pas violer canAdd.
+      let remaining = [...selected];
+      while(remaining.length){
+        // Trier les équipes par total croissant pour cette passe
+        const orderedTeams = [...teams]
+          .filter(t => remaining.some(p => canAdd(t, p)))
+          .sort((a,b) => a.total - b.total || a.players.length - b.players.length);
+
+        if(!orderedTeams.length) break;
+
+        // Construire l'ordre serpentin : A B C D D C B A
+        const snake = [...orderedTeams, ...[...orderedTeams].reverse()];
+        const used = new Set();
+
+        for(const team of snake){
+          if(used.has(team)) continue;
+          // Prend le joueur restant le plus fort qui peut aller dans cette équipe
+          const idx = remaining.findIndex(p => canAdd(team, p));
+          if(idx === -1) continue;
+          const p = remaining.splice(idx, 1)[0];
+          addToTeam(team, p);
+          used.add(team);
+          if(remaining.length === 0) break;
+        }
+
+        // Si aucun joueur assigné dans ce tour → tous au banc
+        if(used.size === 0){
+          remaining.forEach(p => benchPlayers.push(p));
+          break;
+        }
+      }
+    } else {
+      // Greedy : donne à l'équipe la moins forte qui peut accueillir
+      for(const p of selected){
+        const candidates = teams.filter(t=>canAdd(t,p));
+        if(!candidates.length){ benchPlayers.push(p); continue; }
+        candidates.sort((a,b)=> a.total - b.total || a.players.length - b.players.length);
+        addToTeam(candidates[0], p);
+      }
+    }
+
+    // final averages
+    teams.forEach((t)=>{
+      t.avg = t.players.length ? (t.total / t.players.length) : 0;
+    });
+
+    const bench = benchPlayers.map(p=>({p, sc: scoreOf(p), level: getLevel(p)}));
+
+    state.lastTeams = { teams, bench, teamSizes, selectedIds: selected.map(p=>p.id) };
+    state.manualDragDone = false;
+    saveAll();
+    pushHistory(state.lastTeams);
+    renderTeams(state.lastTeams);
+    showToast("Équipes générées ✅", "ok");
+  }catch(err){
+    console.error(err);
+    showToast("Erreur génération : " + (err?.message || err), "bad");
   }
+}
 
-  for(const t of teams){
-    t.avg = t.players.length ? (t.total / t.players.length) : 0;
-    t.total = round2(t.total);
-    t.avg = round2(t.avg);
-  }
 
-  state.lastTeams = {
-    teams, profileKey, tallCut, sizes, seed: SEED,
-    selectedIds: pool.map(p=>p.id)
-  };
-
-  renderTeams(state.lastTeams);
-  showToast("Équipes générées.");
+function recalcTeam(t){
+  t.total = t.players.reduce((s,o)=>s+o.sc,0);
+  t.avg   = t.players.length ? t.total/t.players.length : 0;
+  t.counts = {tall:0,setter:0,libero:0,skill:0,"Débutant":0,"Intermédiaire":0,"Fort":0};
+  const tallThreshold = Number(document.getElementById("tallThreshold")?.value||185);
+  t.players.forEach(o=>{
+    const p = o.p;
+    if(Number(p.taille||0)>=tallThreshold) t.counts.tall++;
+    if(String(p.poste||"").toLowerCase()==="passeur") t.counts.setter++;
+    if(String(p.poste||"").toLowerCase().includes("lib")) t.counts.libero++;
+    const lv = o.level.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(lv==="fort") t.counts["Fort"]++;
+    else if(lv==="intermediaire") t.counts["Intermédiaire"]++;
+    else if(lv==="debutant") t.counts["Débutant"]++;
+  });
 }
 
 function renderTeams(payload){
   const teams = payload.teams;
 
-  const totals = teams.map(t=>t.total);
-  const avgs = teams.map(t=>t.avg);
-  const gapT = totals.length ? (Math.max(...totals) - Math.min(...totals)) : 0;
-  const gapA = avgs.length ? (Math.max(...avgs) - Math.min(...avgs)) : 0;
-  gapTotal.textContent = gapT.toFixed(2);
-  gapAvg.textContent = gapA.toFixed(2);
+  // Recalc gaps
+  const updateGaps = ()=>{
+    const totals = teams.map(t=>t.total);
+    const avgs   = teams.map(t=>t.avg);
+    gapTotal.textContent = totals.length ? (Math.max(...totals)-Math.min(...totals)).toFixed(2) : "—";
+    gapAvg.textContent   = avgs.length   ? (Math.max(...avgs)  -Math.min(...avgs)  ).toFixed(2) : "—";
+  };
+  updateGaps();
 
   teamsEl.innerHTML = "";
-  teams.forEach((t, ti)=>{
+
+  // Drag state
+  let dragPayload = null; // { teamIdx, playerObj }
+
+  const buildTeamCard = (t, tIdx) => {
     const card = document.createElement("div");
     card.className = "teamCard";
-    card.innerHTML = `
+    card.dataset.teamIdx = tIdx;
+
+    const renderHeader = () => `
       <div class="teamHd">
-        <div class="k">${escapeHtml(t.name)} <span class="muted">(${t.players.length}/${t.target})</span></div>
+        <div class="k">${escapeHtml(t.name)} <span class="muted">(${t.players.length}/${t.target||"?"})</span></div>
         <div class="mini">
           <span class="pill ok">Total <b>${t.total.toFixed(2)}</b></span>
           <span class="pill neutral">Moy <b>${t.avg.toFixed(2)}</b></span>
         </div>
-      </div>
-      <div class="teamBd">
-        <div class="mini">
-          <span class="pill warn">Grands: <b>${t.counts.tall}</b></span>
-          <span class="pill neutral">Passeurs: <b>${t.counts.setter}</b></span>
-          <span class="pill neutral">Libéros: <b>${t.counts.libero}</b></span>
-          ${state.skillConstraint ? `<span class="pill neutral">Forts (critère): <b>${t.counts.skill}</b></span>` : ""}
-          <span class="pill ok">Niv Fort: <b>${t.counts.Fort}</b></span>
-          <span class="pill warn">Niv Inter: <b>${t.counts.Intermédiaire}</b></span>
-          <span class="pill bad">Niv Début: <b>${t.counts.Débutant}</b></span>
-        </div>
-        <div class="hr"></div>
-        <div class="list teamList" data-team-index="${ti}"></div>
-      </div>
-    `;
-    const list = card.querySelector(".list");
-    t.players
-      .slice()
-      .sort((a,b)=>b.sc-a.sc)
-      .forEach(o=>{
-        const p = o.p;
-        const el = document.createElement("div");
-        el.className = "playerChip";
-        el.draggable = true;
-        el.dataset.pid = String(p.id||"");
-        el.dataset.team = String(ti);
-        el.innerHTML = `
-          <div class="left">
-            <div class="n">${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")}</div>
-            <div class="m">${escapeHtml(p.sexe)} • ${escapeHtml(p.poste)} • ${p.taille}cm • Niveau: ${escapeHtml(o.level)}</div>
-          </div>
-          <div class="right">
-            <div class="score">${o.sc.toFixed(2)}</div>
-          </div>
-        `;
-        list.appendChild(el);
-      });
+      </div>`;
 
+    const renderStats = () => `
+      <div class="mini">
+        <span class="pill warn">Grands: <b>${t.counts.tall}</b></span>
+        <span class="pill neutral">Passeurs: <b>${t.counts.setter}</b></span>
+        <span class="pill neutral">Libéros: <b>${t.counts.libero}</b></span>
+        ${state.skillConstraint ? `<span class="pill neutral">Forts (critère): <b>${t.counts.skill}</b></span>` : ""}
+        <span class="pill ok">Niv Fort: <b>${t.counts.Fort}</b></span>
+        <span class="pill warn">Niv Inter: <b>${t.counts.Intermédiaire}</b></span>
+        <span class="pill bad">Niv Début: <b>${t.counts.Débutant}</b></span>
+      </div>`;
+
+    const refreshCard = () => {
+      recalcTeam(t);
+      updateGaps();
+      card.querySelector(".teamHd").outerHTML; // trigger
+      card.innerHTML = "";
+      card.insertAdjacentHTML("beforeend", renderHeader());
+      const body = document.createElement("div");
+      body.className = "teamBd";
+      body.insertAdjacentHTML("beforeend", renderStats());
+      body.insertAdjacentHTML("beforeend", '<div class="hr"></div>');
+      const list = document.createElement("div");
+      list.className = "list";
+      body.appendChild(list);
+      card.appendChild(body);
+      setupList(list, t, tIdx);
+      // re-attach drag events to card
+      setupCardDrop(card, t, tIdx, refreshCard);
+    };
+
+    card.insertAdjacentHTML("beforeend", renderHeader());
+    const body = document.createElement("div");
+    body.className = "teamBd";
+    body.insertAdjacentHTML("beforeend", renderStats());
+    body.insertAdjacentHTML("beforeend", '<div class="hr"></div>');
+    const list = document.createElement("div");
+    list.className = "list";
+    body.appendChild(list);
+    card.appendChild(body);
+
+    setupList(list, t, tIdx);
+    setupCardDrop(card, t, tIdx, refreshCard);
+    return card;
+  };
+
+  const setupList = (list, t, tIdx) => {
+    list.innerHTML = "";
+    t.players.slice().sort((a,b)=>b.sc-a.sc).forEach(o=>{
+      const p = o.p;
+      const el = document.createElement("div");
+      el.className = "playerChip";
+      el.draggable = true;
+      el.dataset.playerId = p.id;
+      el.innerHTML = `
+        <span class="drag-handle">⠿</span>
+        <div class="left" style="flex:1">
+          <div class="n">${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")}</div>
+          <div class="m">${escapeHtml(p.sexe)} • ${escapeHtml(p.poste)} • ${p.taille}cm • Niveau: ${escapeHtml(o.level)}</div>
+        </div>
+        <div class="score">${o.sc.toFixed(2)}</div>`;
+
+      el.addEventListener("dragstart", e=>{
+        dragPayload = { fromTeamIdx: tIdx, playerObj: o };
+        el.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", p.id);
+      });
+      el.addEventListener("dragend", ()=>{ el.classList.remove("dragging"); });
+
+      // ── Touch drag & drop (mobile) ──────────────────────────────────────
+      let ghost = null;
+      let touchActive = false;
+      let touchLongPressTimer = null;
+      const LONG_PRESS_MS = 200;
+
+      const createGhost = () => {
+        ghost = document.createElement("div");
+        ghost.className = "touch-ghost";
+        ghost.textContent = `${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")} · ${o.sc.toFixed(2)}`;
+        document.body.appendChild(ghost);
+      };
+      const moveGhost = (x, y) => {
+        if(!ghost) return;
+        ghost.style.left = (x - ghost.offsetWidth/2) + "px";
+        ghost.style.top  = (y - 28) + "px";
+      };
+      const removeGhost = () => { if(ghost){ ghost.remove(); ghost = null; } };
+
+      const getTargetCard = (x, y) => {
+        // Temporarily hide ghost so elementFromPoint works through it
+        if(ghost) ghost.style.display = "none";
+        const el2 = document.elementFromPoint(x, y);
+        if(ghost) ghost.style.display = "";
+        return el2?.closest(".teamCard") || null;
+      };
+
+      el.addEventListener("touchstart", e => {
+        // Long press to initiate drag
+        touchLongPressTimer = setTimeout(() => {
+          touchActive = true;
+          dragPayload = { fromTeamIdx: tIdx, playerObj: o };
+          el.classList.add("dragging");
+          const t0 = e.touches[0];
+          createGhost();
+          moveGhost(t0.clientX, t0.clientY);
+          // Haptic feedback if available
+          if(navigator.vibrate) navigator.vibrate(30);
+        }, LONG_PRESS_MS);
+      }, { passive: true });
+
+      el.addEventListener("touchmove", e => {
+        clearTimeout(touchLongPressTimer);
+        if(!touchActive) return;
+        e.preventDefault();
+        const t0 = e.touches[0];
+        moveGhost(t0.clientX, t0.clientY);
+        // Highlight target card
+        teamsEl.querySelectorAll(".teamCard").forEach(c => c.classList.remove("drag-over"));
+        const target = getTargetCard(t0.clientX, t0.clientY);
+        if(target && Number(target.dataset.teamIdx) !== tIdx) target.classList.add("drag-over");
+      }, { passive: false });
+
+      const onTouchEnd = e => {
+        clearTimeout(touchLongPressTimer);
+        if(!touchActive){ touchActive = false; return; }
+        touchActive = false;
+        el.classList.remove("dragging");
+        teamsEl.querySelectorAll(".teamCard").forEach(c => c.classList.remove("drag-over"));
+        removeGhost();
+
+        const t0 = e.changedTouches[0];
+        const targetCard = getTargetCard(t0.clientX, t0.clientY);
+        if(!targetCard) { dragPayload = null; return; }
+        const toIdx = Number(targetCard.dataset.teamIdx);
+        if(toIdx === tIdx || isNaN(toIdx)) { dragPayload = null; return; }
+
+        // Perform the move
+        const srcTeam = teams[tIdx];
+        const dstTeam = teams[toIdx];
+        srcTeam.players = srcTeam.players.filter(x => x.p.id !== p.id);
+        dstTeam.players.push(o);
+        recalcTeam(srcTeam);
+        recalcTeam(dstTeam);
+
+        dragPayload = null;
+
+        // Full re-render
+        teamsEl.innerHTML = "";
+        teams.forEach((team, i) => {
+          const c = buildTeamCard(team, i);
+          c.dataset.teamIdx = i;
+          teamsEl.appendChild(c);
+        });
+        updateGaps();
+        state.lastTeams = payload;
+        state.manualDragDone = true;
+        saveAll();
+      };
+
+      el.addEventListener("touchend",    onTouchEnd, { passive: true });
+      el.addEventListener("touchcancel", onTouchEnd, { passive: true });
+      // ────────────────────────────────────────────────────────────────────
+
+      list.appendChild(el);
+    });
+  };
+
+  const setupCardDrop = (card, t, tIdx, refreshCard) => {
+    card.addEventListener("dragover", e=>{
+      if(!dragPayload || dragPayload.fromTeamIdx === tIdx) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      card.classList.add("drag-over");
+    });
+    card.addEventListener("dragleave", e=>{
+      if(!card.contains(e.relatedTarget)) card.classList.remove("drag-over");
+    });
+    card.addEventListener("drop", e=>{
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      if(!dragPayload || dragPayload.fromTeamIdx === tIdx) return;
+
+      const { fromTeamIdx, playerObj } = dragPayload;
+      dragPayload = null;
+
+      // Move player: remove from source team, add to target
+      const srcTeam = teams[fromTeamIdx];
+      srcTeam.players = srcTeam.players.filter(o=>o.p.id !== playerObj.p.id);
+      t.players.push(playerObj);
+
+      // Recalc both teams
+      recalcTeam(srcTeam);
+      recalcTeam(t);
+      updateGaps();
+
+      // Re-render both cards
+      const srcCard = teamsEl.querySelector(`[data-team-idx="${fromTeamIdx}"]`);
+      if(srcCard){
+        const srcList = srcCard.querySelector(".list");
+        const srcTd = teams[fromTeamIdx];
+        srcCard.querySelector(".teamHd").innerHTML = `
+          <div class="k">${escapeHtml(srcTd.name)} <span class="muted">(${srcTd.players.length}/${srcTd.target||"?"})</span></div>
+          <div class="mini">
+            <span class="pill ok">Total <b>${srcTd.total.toFixed(2)}</b></span>
+            <span class="pill neutral">Moy <b>${srcTd.avg.toFixed(2)}</b></span>
+          </div>`;
+        srcCard.querySelector(".mini").outerHTML;
+        // refresh stats
+        const srcStats = srcCard.querySelector(".teamBd .mini");
+        if(srcStats) srcStats.outerHTML = srcStats.outerHTML; // no-op, rebuild below
+        setupList(srcList, srcTd, fromTeamIdx);
+      }
+
+      // Refresh target card header + stats + list
+      card.querySelector(".teamHd").innerHTML = `
+        <div class="k">${escapeHtml(t.name)} <span class="muted">(${t.players.length}/${t.target||"?"})</span></div>
+        <div class="mini">
+          <span class="pill ok">Total <b>${t.total.toFixed(2)}</b></span>
+          <span class="pill neutral">Moy <b>${t.avg.toFixed(2)}</b></span>
+        </div>`;
+      setupList(card.querySelector(".list"), t, tIdx);
+
+      // Full re-render for stats row (simpler and reliable)
+      teamsEl.innerHTML = "";
+      teams.forEach((team, i)=>{
+        const c = buildTeamCard(team, i);
+        c.dataset.teamIdx = i;
+        teamsEl.appendChild(c);
+      });
+      updateGaps();
+      // Persist updated teams after drag & drop
+      state.lastTeams = payload;
+      state.manualDragDone = true;
+      saveAll();
+    });
+  };
+
+  teams.forEach((t, i)=>{
+    const card = buildTeamCard(t, i);
+    card.dataset.teamIdx = i;
     teamsEl.appendChild(card);
   });
 
   seedLabel.textContent = String(SEED);
-  enableTeamsDnD(payload);
-}
-
-
-/** ---------------------------
- *  DRAG & DROP (rééquilibrage manuel)
- *  - Drag un joueur d'une équipe vers une autre
- *  - Drop sur un joueur = SWAP (recommandé car les équipes sont pleines)
- *  - Drop sur une zone vide = MOVE (si l'équipe a une place)
- *  --------------------------- */
-let _dnd = { fromTeam: null, pid: null };
-
-function recomputeTeamStats(t){
-  t.total = 0;
-  t.counts = {tall:0,setter:0,libero:0, skill:0, Fort:0, Intermédiaire:0, Débutant:0};
-  for(const o of (t.players||[])){
-    t.total += Number(o.sc||0);
-    if(o.tall) t.counts.tall++;
-    if(o.isSetter) t.counts.setter++;
-    if(o.isLibero) t.counts.libero++;
-    if(o.isStrong) t.counts.skill++;
-    if(o.level==="Fort") t.counts.Fort++;
-    if(o.level==="Intermédiaire") t.counts.Intermédiaire++;
-    if(o.level==="Débutant") t.counts.Débutant++;
-  }
-  t.avg = (t.players && t.players.length) ? (t.total / t.players.length) : 0;
-  t.total = round2(t.total);
-  t.avg = round2(t.avg);
-}
-
-function findObjInTeam(team, pid){
-  return (team.players||[]).find(o => String(o?.p?.id||"") === String(pid));
-}
-
-function enableTeamsDnD(payload){
-  // active seulement si des équipes existent
-  if(!payload || !payload.teams) return;
-
-  const lists = document.querySelectorAll(".teamList");
-  lists.forEach(list=>{
-    list.addEventListener("dragover", (e)=>{ e.preventDefault(); list.classList.add("dropHover"); });
-    list.addEventListener("dragleave", ()=> list.classList.remove("dropHover"));
-    list.addEventListener("drop", (e)=>{
-      e.preventDefault();
-      list.classList.remove("dropHover");
-
-      const toTeamIdx = Number(list.dataset.teamIndex);
-      if(!Number.isFinite(toTeamIdx)) return;
-
-      const fromTeamIdx = (_dnd.fromTeam!=null) ? Number(_dnd.fromTeam) : Number(e.dataTransfer.getData("text/fromTeam"));
-      const pid = _dnd.pid || e.dataTransfer.getData("text/pid");
-      if(fromTeamIdx==null || !pid) return;
-
-      if(!payload.teams[fromTeamIdx] || !payload.teams[toTeamIdx]) return;
-      if(fromTeamIdx === toTeamIdx) return;
-
-      const fromTeam = payload.teams[fromTeamIdx];
-      const toTeam = payload.teams[toTeamIdx];
-
-      const fromObj = findObjInTeam(fromTeam, pid);
-      if(!fromObj) return;
-
-      // Si on drop sur un joueur => swap
-      const chip = e.target.closest?.(".playerChip");
-      const targetPid = chip?.dataset?.pid;
-
-      if(targetPid){
-        const toObj = findObjInTeam(toTeam, targetPid);
-        if(!toObj) return;
-
-        // swap
-        const iA = fromTeam.players.indexOf(fromObj);
-        const iB = toTeam.players.indexOf(toObj);
-        if(iA<0 || iB<0) return;
-
-        fromTeam.players[iA] = toObj;
-        toTeam.players[iB] = fromObj;
-
-        recomputeTeamStats(fromTeam);
-        recomputeTeamStats(toTeam);
-        renderTeams(payload);
-        showToast("Swap effectué ✅");
-        return;
-      }
-
-      // sinon: move si place dispo
-      if((toTeam.players||[]).length >= Number(toTeam.target||0)){
-        showToast("Équipe pleine: dépose sur un joueur pour faire un swap.");
-        return;
-      }
-
-      fromTeam.players = fromTeam.players.filter(o => o !== fromObj);
-      toTeam.players.push(fromObj);
-
-      recomputeTeamStats(fromTeam);
-      recomputeTeamStats(toTeam);
-      renderTeams(payload);
-      showToast("Joueur déplacé ✅");
-    });
-  });
-
-  const chips = document.querySelectorAll(".playerChip[draggable='true'], .playerChip");
-  chips.forEach(ch=>{
-    ch.setAttribute("draggable","true");
-    ch.addEventListener("dragstart", (e)=>{
-      const pid = ch.dataset.pid;
-      const team = ch.dataset.team;
-      _dnd = { fromTeam: team, pid };
-      try{
-        e.dataTransfer.setData("text/pid", pid);
-        e.dataTransfer.setData("text/fromTeam", team);
-        e.dataTransfer.effectAllowed = "move";
-      }catch{}
-      ch.classList.add("dragging");
-    });
-    ch.addEventListener("dragend", ()=>{
-      ch.classList.remove("dragging");
-      _dnd = { fromTeam: null, pid: null };
-      document.querySelectorAll(".teamList.dropHover").forEach(x=>x.classList.remove("dropHover"));
-    });
-  });
+  // Show swipe hint if teams exist
+  const swipeHint = document.getElementById("swipeHint");
+  if(swipeHint) swipeHint.style.display = (payload.teams && payload.teams.length > 0) ? "block" : "none";
 }
 
 /** ---------------------------
@@ -2094,12 +2505,13 @@ btnBulkInactive.addEventListener("click", ()=>{
 btnBulkDelete.addEventListener("click", ()=>{
   const sel = getSelectedPlayers();
   if(!sel.length) return showToast("Aucune sélection.");
-  if(!confirm(`Supprimer ${sel.length} joueur(s) ?`)) return;
-  const selSet = new Set(sel);
-  state.players = state.players.filter(p=>!selSet.has(p));
-  renderPlayers();
-  if(state.lastTeams) generateTeams();
-  showToast("Sélection supprimée.");
+  pwaConfirm(`Supprimer ${sel.length} joueur(s) ?`, ()=>{
+    const selSet = new Set(sel);
+    state.players = state.players.filter(p=>!selSet.has(p));
+    renderPlayers();
+    if(state.lastTeams) generateTeams();
+    showToast("Sélection supprimée.");
+  }); return;
 });
 
 /** ---------------------------
@@ -2133,12 +2545,22 @@ btnExport.addEventListener("click", ()=>{
     weights,
     skillConstraint: state.skillConstraint
   };
+  // Inclure aussi la sauvegarde locale et l'historique
+  try{
+    const local = localStorage.getItem(KEY_LOCAL);
+    const history = localStorage.getItem(KEY_HISTORY);
+    if(local)   data._localBackup   = JSON.parse(local);
+    if(history) data._historyBackup = JSON.parse(history);
+  }catch(e){}
+
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `team_balancer_volley_export_${Date.now()}.json`;
+  a.style.display = "none";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   showToast("Export JSON prêt.");
 });
 
@@ -2173,9 +2595,35 @@ function applyImportedData(data){
   state.groups = Array.isArray(data.groups) ? structuredClone(data.groups) : (state.groups || []);
   if(data.weights && typeof data.weights === "object") weights = structuredClone(data.weights);
   if(data.skillConstraint && typeof data.skillConstraint === "object") state.skillConstraint = structuredClone(data.skillConstraint);
-  showToast("Import OK (joueurs + pondérations).");
+
+  // Restaurer la config locale et l'historique si présents
+  let restoredExtra = [];
+  if(data._localBackup){
+    try{
+      localStorage.setItem(KEY_LOCAL, JSON.stringify(data._localBackup));
+      // Restaurer lastTeams si présent
+      if(data._localBackup?.state?.lastTeams){
+        state.lastTeams = data._localBackup.state.lastTeams;
+        const playerMap = new Map(state.players.map(p=>[p.id, p]));
+        state.lastTeams.teams.forEach(t=>{
+          t.players = t.players.map(o=>({...o, p: playerMap.get(o.p?.id)||o.p})).filter(o=>o.p);
+        });
+      }
+      restoredExtra.push("config locale");
+    }catch(e){}
+  }
+  if(data._historyBackup){
+    try{
+      localStorage.setItem(KEY_HISTORY, JSON.stringify(data._historyBackup));
+      restoredExtra.push("historique");
+    }catch(e){}
+  }
+
+  const extra = restoredExtra.length ? ` + ${restoredExtra.join(" + ")}` : "";
+  showToast(`Import OK (joueurs + pondérations${extra}).`);
   renderPlayers();
-  teamsEl.innerHTML = "";
+  if(state.lastTeams) renderTeams(state.lastTeams);
+  else teamsEl.innerHTML = "";
   closeImportOverlay();
 }
 importApply.addEventListener("click", ()=>{
@@ -2531,7 +2979,12 @@ csvDoImport.addEventListener("click", ()=>{
   if(!txt){ showToast("Colle un CSV ou choisis un fichier."); return; }
 
   if(_csvContext.kind === "players"){
-    if(csvMode.value==="replace" && !confirm("Remplacement complet: tu vas supprimer la liste actuelle. Continuer ?")) return;
+    if(csvMode.value==="replace"){
+      pwaConfirm("Remplacement complet: tu vas supprimer la liste actuelle. Continuer ?", ()=>{
+        const ok2 = importPlayersFromCSV(txt);
+        if(ok2) closeCsvOverlay();
+      }); return;
+    }
     const ok = importPlayersFromCSV(txt);
     if(ok) closeCsvOverlay();
   }else if(_csvContext.kind === "notes"){
@@ -2671,10 +3124,11 @@ function renderGroupsUI(){
         closeGroups();
       });
       row.querySelector("[data-del]").addEventListener("click", ()=>{
-        if(!confirm(`Supprimer le groupe "${g.name}" ?`)) return;
-        state.groups = state.groups.filter(x=>x.id !== g.id);
-        showToast("Groupe supprimé.");
-        renderGroupsUI();
+        pwaConfirm(`Supprimer le groupe "${g.name}" ?`, ()=>{
+          state.groups = state.groups.filter(x=>x.id !== g.id);
+          showToast("Groupe supprimé.");
+          renderGroupsUI();
+        }); return;
       });
 
       gSavedList.appendChild(row);
@@ -2817,10 +3271,11 @@ renderGroupsUI = function(){
         closeGroups();
       });
       row.querySelector("[data-del]").addEventListener("click", ()=>{
-        if(!confirm(`Supprimer le groupe "${g.name}" ?`)) return;
-        state.groups = state.groups.filter(x=>x.id !== g.id);
-        showToast("Groupe supprimé.");
-        renderGroupsUI();
+        pwaConfirm(`Supprimer le groupe "${g.name}" ?`, ()=>{
+          state.groups = state.groups.filter(x=>x.id !== g.id);
+          showToast("Groupe supprimé.");
+          renderGroupsUI();
+        }); return;
       });
       gSavedList.appendChild(row);
     });
@@ -2847,7 +3302,17 @@ btnLoadLocal.addEventListener("click", ()=>{
     if(data?.weights) weights = data.weights;
     showToast("Chargé (local).");
     renderPlayers();
-    if(state.lastTeams) renderTeams(state.lastTeams);
+    if(state.lastTeams){
+      // Re-lier les objets joueurs aux instances live de state.players
+      const playerMap = new Map(state.players.map(p=>[p.id, p]));
+      state.lastTeams.teams.forEach(t=>{
+        t.players = t.players.map(o=>({
+          ...o,
+          p: playerMap.get(o.p?.id) || o.p
+        })).filter(o=>o.p);
+      });
+      renderTeams(state.lastTeams);
+    }
   }catch{
     showToast("Sauvegarde locale corrompue.");
   }
@@ -2857,29 +3322,36 @@ btnLoadLocal.addEventListener("click", ()=>{
  *  RESET
  *  --------------------------- */
 btnReset.addEventListener("click", ()=>{
-  if(!confirm("Reset : revenir à l'exemple minimal ?")) return;
-  state = { players: structuredClone(defaultPlayers), lastTeams:null, skillConstraint: state.skillConstraint };
-  SEED = 1;
-  seedLabel.textContent = "1";
-  renderPlayers();
-  teamsEl.innerHTML = "";
-  gapTotal.textContent = "—";
-  gapAvg.textContent = "—";
-  showToast("Reset fait.");
+  pwaConfirm("Reset : revenir à l'exemple minimal ?", ()=>{
+    state = { players: structuredClone(defaultPlayers), lastTeams:null, skillConstraint: state.skillConstraint };
+    SEED = 1;
+    seedLabel.textContent = "1";
+    renderPlayers();
+    teamsEl.innerHTML = "";
+    gapTotal.textContent = "—";
+    gapAvg.textContent = "—";
+    showToast("Reset fait.");
+  }); return;
 });
 
 /** ---------------------------
  *  REROLL / GENERATE
  *  --------------------------- */
 btnGenerate.addEventListener("click", ()=>{
-  SEED = 1;
-  seedLabel.textContent = "1";
-  generateTeams();
+  const doGen = () => { SEED = 1; seedLabel.textContent = "1"; generateTeams(); };
+  if(state.manualDragDone){
+    pwaConfirm("Tu as modifié les équipes manuellement. Re-générer va effacer ces changements.", doGen);
+  } else {
+    doGen();
+  }
 });
 btnReroll.addEventListener("click", ()=>{
-  SEED += 1;
-  seedLabel.textContent = String(SEED);
-  generateTeams();
+  const doReroll = () => { SEED += 1; seedLabel.textContent = String(SEED); generateTeams(); };
+  if(state.manualDragDone){
+    pwaConfirm("Tu as modifié les équipes manuellement. Re-générer va effacer ces changements.", doReroll);
+  } else {
+    doReroll();
+  }
 });
 
 /** ---------------------------
@@ -2975,22 +3447,18 @@ weightsCancel.addEventListener("click", closeWeightsOverlay);
 weightsSave.addEventListener("click", saveWeightsOverlay);
 weightsReset.addEventListener("click", ()=>{
   if(!_weightsDraft) return;
-  if(!confirm("Reset : remettre les poids par défaut pour ce profil ?")) return;
-  // defaults
-  const defaults = structuredClone({
-    global: weights.global,
-    off: weights.off,
-    def: weights.def
-  });
-  const pk = _weightsDraft.profileKey;
-  _weightsDraft.w = structuredClone(defaults[pk] || defaults.global);
-  weightsList.querySelectorAll(".critRow").forEach(row=>{
-    const k = row.dataset.key;
-    const valEl = row.querySelector('[data-role="val"]');
-    const v = Number(_weightsDraft.w[k] ?? 1);
-    if(valEl) valEl.textContent = v.toFixed(1);
-  });
-  showToast("Reset effectué.");
+  pwaConfirm("Reset : remettre les poids par défaut pour ce profil ?", ()=>{
+    const defaults = structuredClone({ global: weights.global, off: weights.off, def: weights.def });
+    const pk = _weightsDraft.profileKey;
+    _weightsDraft.w = structuredClone(defaults[pk] || defaults.global);
+    weightsList.querySelectorAll(".critRow").forEach(row=>{
+      const k = row.dataset.key;
+      const valEl = row.querySelector('[data-role="val"]');
+      const v = Number(_weightsDraft.w[k] ?? 1);
+      if(valEl) valEl.textContent = v.toFixed(1);
+    });
+    showToast("Reset effectué.");
+  }); return;
 });
 weightsOverlay.addEventListener("click", (e)=>{ if(e.target === weightsOverlay) closeWeightsOverlay(); });
 
@@ -3159,9 +3627,9 @@ function saveRating(){
   closeRating();
 }
 
-rateBack.addEventListener("click", ()=>{ if(!_rateDirty || confirm("Quitter sans sauvegarder ?")) closeRating(); });
-rateCancel.addEventListener("click", ()=>{ if(!_rateDirty || confirm("Annuler les changements ?")) closeRating(); });
-rateOverlay.addEventListener("click", (e)=>{ if(e.target === rateOverlay){ if(!_rateDirty || confirm("Quitter sans sauvegarder ?")) closeRating(); } });
+rateBack.addEventListener("click", ()=>{ if(!_rateDirty){ closeRating(); } else { pwaConfirm("Quitter sans sauvegarder ?", closeRating); } });
+rateCancel.addEventListener("click", ()=>{ if(!_rateDirty){ closeRating(); } else { pwaConfirm("Annuler les changements ?", closeRating); } });
+rateOverlay.addEventListener("click", (e)=>{ if(e.target === rateOverlay){ if(!_rateDirty){ closeRating(); } else { pwaConfirm("Quitter sans sauvegarder ?", closeRating); } } });
 rateSave.addEventListener("click", saveRating);
 rateAll6.addEventListener("click", ()=>{
   if(!_rateDraft) return;
@@ -3176,16 +3644,17 @@ rateAll6.addEventListener("click", ()=>{
 });
 rateReset.addEventListener("click", ()=>{
   if(!_ratePlayerRef || !_rateDraft) return;
-  if(!confirm("Reset : remettre ce joueur à 6 partout (et vider le commentaire) ?")) return;
-  CRIT_KEYS.forEach(k => _rateDraft.notes[k] = 6);
-  rateComment.value = "";
-  setRateDirty(true);
-  criteriaList.querySelectorAll(".critRow").forEach(row=>{
-    const k = row.dataset.key;
-    const valEl = row.querySelector('[data-role="val"]');
-    if(valEl) valEl.textContent = String(_rateDraft.notes[k] ?? 6);
-  });
-  refreshRatingKPIs();
+  pwaConfirm("Reset : remettre ce joueur à 6 partout (et vider le commentaire) ?", ()=>{
+    CRIT_KEYS.forEach(k => _rateDraft.notes[k] = 6);
+    rateComment.value = "";
+    setRateDirty(true);
+    criteriaList.querySelectorAll(".critRow").forEach(row=>{
+      const k = row.dataset.key;
+      const valEl = row.querySelector('[data-role="val"]');
+      if(valEl) valEl.textContent = String(_rateDraft.notes[k] ?? 6);
+    });
+    refreshRatingKPIs();
+  }); return;
 });
 rateLevelManual.addEventListener("change", ()=>{
   if(!_rateDraft) return;
@@ -3195,7 +3664,7 @@ rateLevelManual.addEventListener("change", ()=>{
 });
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && !rateOverlay.classList.contains("hidden")){
-    if(!_rateDirty || confirm("Quitter sans sauvegarder ?")) closeRating();
+    if(!_rateDirty){ closeRating(); } else { pwaConfirm("Quitter sans sauvegarder ?", closeRating); }
   }
 });
 
@@ -3236,6 +3705,8 @@ function openPlayerForm(mode, player){
     pPresent.value = player.present ? "1" : "0";
     pClub.value = (Array.isArray(player.clubs) ? player.clubs.join(", ") : String(player.club||""));
     playerDelete.style.display = "inline-block";
+    // Render incompatibility tags
+    setTimeout(()=>{ if(window._renderIncompatTags) window._renderIncompatTags(); }, 0);
   }else{
     pPrenom.value = "";
     pNom.value = "";
@@ -3330,23 +3801,24 @@ function savePlayerForm(){
   closePlayerForm();
 }
 
-playerBack.addEventListener("click", ()=>{ if(!_playerDirty || confirm("Quitter sans enregistrer ?")) closePlayerForm(); });
-playerCancel.addEventListener("click", ()=>{ if(!_playerDirty || confirm("Annuler les changements ?")) closePlayerForm(); });
-playerOverlay.addEventListener("click", (e)=>{ if(e.target === playerOverlay){ if(!_playerDirty || confirm("Quitter sans enregistrer ?")) closePlayerForm(); } });
+playerBack.addEventListener("click", ()=>{ if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Quitter sans enregistrer ?", closePlayerForm); } });
+playerCancel.addEventListener("click", ()=>{ if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Annuler les changements ?", closePlayerForm); } });
+playerOverlay.addEventListener("click", (e)=>{ if(e.target === playerOverlay){ if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Quitter sans enregistrer ?", closePlayerForm); } } });
 playerSave.addEventListener("click", savePlayerForm);
 playerDelete.addEventListener("click", ()=>{
   if(!_editPlayerRef) return;
-  if(!confirm("Supprimer ce joueur ?")) return;
-  state.players = state.players.filter(p => p !== _editPlayerRef);
-  showToast("Joueur supprimé.");
-  renderPlayers();
-  if(state.lastTeams) generateTeams();
-  closePlayerForm();
+  pwaConfirm("Supprimer ce joueur ?", ()=>{
+    state.players = state.players.filter(p => p !== _editPlayerRef);
+    showToast("Joueur supprimé.");
+    renderPlayers();
+    if(state.lastTeams) generateTeams();
+    closePlayerForm();
+  }); return;
 });
 btnAddPlayer.addEventListener("click", ()=> openPlayerForm("add"));
 document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && !playerOverlay.classList.contains("hidden")){
-    if(!_playerDirty || confirm("Quitter sans enregistrer ?")) closePlayerForm();
+    if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Quitter sans enregistrer ?", closePlayerForm); }
   }
 });
 
@@ -3375,7 +3847,555 @@ document.addEventListener("keydown", (e)=>{
   seedLabel.textContent = String(SEED);
   showToast("Prêt. Utilise ✎ pour éditer, Noter pour les 10 critères, et Import CSV pour remplir en lot.");
 })();
+
+/* ══════════════════════════════════════════════════════════
+   MODE TERRAIN
+══════════════════════════════════════════════════════════ */
+(function(){
+  function initTerrain(){
+  const overlay   = document.getElementById("terrainOverlay");
+  const slider    = document.getElementById("terrainSlider");
+  const dotsEl    = document.getElementById("terrainDots");
+  const closeBtn  = document.getElementById("terrainClose");
+  const teamsArea = document.getElementById("teams");
+
+  let currentIdx = 0;
+  let slides = [];
+
+  function getLevelClass(level){
+    const l = (level||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(l === "fort") return "fort";
+    if(l === "intermediaire") return "inter";
+    return "deb";
+  }
+  function getLevelLabel(level){
+    const l = (level||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(l === "fort") return "Fort";
+    if(l === "intermediaire") return "Inter";
+    return "Déb";
+  }
+
+  function openTerrain(){
+    if(!state.lastTeams || !state.lastTeams.teams.length) return;
+    const teams = state.lastTeams.teams;
+    slider.innerHTML = "";
+    dotsEl.innerHTML = "";
+    slides = [];
+    currentIdx = 0;
+
+    teams.forEach((t, i) => {
+      const slide = document.createElement("div");
+      slide.className = "terrain-slide";
+      slide.dataset.team = t.name;
+
+      const playersHtml = t.players
+        .slice().sort((a,b) => b.sc - a.sc)
+        .map(o => {
+          const lvCls   = getLevelClass(o.level);
+          const lvLabel = getLevelLabel(o.level);
+          const poste   = (o.p.poste && o.p.poste !== "non défini") ? o.p.poste : "";
+          return `<div class="terrain-player">
+            <div class="terrain-player-name">${escapeHtml(o.p.prenom)} ${escapeHtml(o.p.nom||"")}</div>
+            ${poste ? `<span class="terrain-player-poste">${escapeHtml(poste)}</span>` : ""}
+            <span class="terrain-player-level ${lvCls}">${lvLabel}</span>
+          </div>`;
+        }).join("");
+
+      slide.innerHTML = `
+        <div class="terrain-team-name">${escapeHtml(t.name)}</div>
+        <div class="terrain-team-count">${t.players.length} joueur${t.players.length>1?"s":""}</div>
+        <div class="terrain-players">${playersHtml}</div>`;
+
+      slider.appendChild(slide);
+      slides.push(slide);
+
+      // Dot
+      const dot = document.createElement("div");
+      dot.className = "terrain-dot" + (i===0?" active":"");
+      dot.addEventListener("click", ()=> goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+    renderSlide(0);
+  }
+
+  function closeTerrain(){
+    overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  function renderSlide(idx){
+    currentIdx = Math.max(0, Math.min(idx, slides.length-1));
+    const offset = -currentIdx * 100;
+    slides.forEach((s, i) => {
+      s.style.transform = `translateX(${(i - currentIdx)*100}%)`;
+    });
+    dotsEl.querySelectorAll(".terrain-dot").forEach((d,i)=>{
+      d.classList.toggle("active", i===currentIdx);
+    });
+  }
+
+  function goTo(idx){ renderSlide(idx); }
+  function prev(){ if(currentIdx > 0) renderSlide(currentIdx-1); }
+  function next(){ if(currentIdx < slides.length-1) renderSlide(currentIdx+1); }
+
+  closeBtn.addEventListener("click", closeTerrain);
+
+  // ── Swipe horizontal inside overlay ──────────────────────
+  let txStart = 0, txStartY = 0, txDragging = false;
+  slider.addEventListener("touchstart", e=>{
+    txStart  = e.touches[0].clientX;
+    txStartY = e.touches[0].clientY;
+    txDragging = true;
+  }, {passive:true});
+  slider.addEventListener("touchend", e=>{
+    if(!txDragging) return;
+    txDragging = false;
+    const dx = e.changedTouches[0].clientX - txStart;
+    const dy = e.changedTouches[0].clientY - txStartY;
+    if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40){
+      dx < 0 ? next() : prev();
+    }
+    // Swipe down → close
+    if(dy > 80 && Math.abs(dy) > Math.abs(dx)*1.5) closeTerrain();
+  }, {passive:true});
+
+  // Keyboard arrows
+  document.addEventListener("keydown", e=>{
+    if(!overlay.classList.contains("active")) return;
+    if(e.key==="ArrowRight") next();
+    if(e.key==="ArrowLeft")  prev();
+    if(e.key==="Escape")     closeTerrain();
+  });
+
+  // ── Swipe UP from teams area to open terrain ─────────────
+  let upStartY = 0, upStartX = 0;
+  document.addEventListener("touchstart", e=>{
+    if(overlay.classList.contains("active")) return;
+    upStartY = e.touches[0].clientY;
+    upStartX = e.touches[0].clientX;
+  }, {passive:true});
+  document.addEventListener("touchend", e=>{
+    if(overlay.classList.contains("active")) return;
+    const dy = e.changedTouches[0].clientY - upStartY;
+    const dx = e.changedTouches[0].clientX - upStartX;
+    if(dy < -80 && Math.abs(dy) > Math.abs(dx)*1.5){
+      // Only if touch started within or below the teams area
+      const rect = teamsArea.getBoundingClientRect();
+      if(upStartY >= rect.top - 60) openTerrain();
+    }
+  }, {passive:true});
+
+  // Expose for potential external call
+  window.openTerrainMode = openTerrain;
+  } // end initTerrain
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", initTerrain);
+  } else {
+    initTerrain();
+  }
+})();
+
+/* ══════════════════════════════════════════════════════════
+   PARTAGE DES ÉQUIPES
+══════════════════════════════════════════════════════════ */
+function buildShareText(){
+  if(!state.lastTeams || !state.lastTeams.teams.length) return null;
+  const lines = [];
+  const date = new Date().toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit"});
+  lines.push("🏐 Équipes du " + date);
+  lines.push("");
+
+  state.lastTeams.teams.forEach(t => {
+    const players = t.players
+      .slice().sort((a,b) => b.sc - a.sc)
+      .map(o => {
+        const prenom = o.p.prenom || "";
+        const nom    = o.p.nom    || "";
+        const poste  = (o.p.poste && o.p.poste !== "non défini") ? " (" + o.p.poste + ")" : "";
+        return (prenom + " " + nom).trim() + poste;
+      });
+
+    // Ligne compacte : "Équipe A : Jean Dupont (Passeur), Marie Martin, ..."
+    lines.push("Équipe " + t.name + " : " + players.join(", "));
+  });
+
+  return lines.join("\n");
+}
+
+async function doShare(){
+  const text = buildShareText();
+  if(!text){ showToast("Génère d'abord les équipes.", "warn"); return; }
+
+  // Web Share API si dispo (mobile natif)
+  if(navigator.share){
+    try{
+      await navigator.share({ title:"Équipes volley", text });
+      return;
+    }catch(e){ /* annulé ou non supporté */ }
+  }
+
+  // Fallback : presse-papier
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast("✅ Équipes copiées dans le presse-papier !", "ok");
+  }catch(e){
+    // Dernier recours : textarea select
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    showToast("✅ Équipes copiées !", "ok");
+  }
+}
+
+// Bouton dans la vue résultats
+document.getElementById("btnShare")?.addEventListener("click", doShare);
+
+// Bouton dans le mode terrain (initialisé après DOM)
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.getElementById("btnShareTerrain")?.addEventListener("click", doShare);
+});
+
+// Afficher/masquer le bouton partage avec les équipes
+const _origRenderTeams = window._origRenderTeams;
+(()=>{
+  const shareRow = document.getElementById("shareRow");
+  if(!shareRow) return;
+  // Observer : affiche shareRow quand teams est peuplé
+  const observer = new MutationObserver(()=>{
+    const hasTeams = document.querySelector("#teams .teamCard");
+    shareRow.style.display = hasTeams ? "block" : "none";
+  });
+  const teamsEl2 = document.getElementById("teams");
+  if(teamsEl2) observer.observe(teamsEl2, {childList:true});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   HISTORIQUE DES GÉNÉRATIONS
+══════════════════════════════════════════════════════════ */
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(KEY_HISTORY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveHistory(hist){
+  try{ localStorage.setItem(KEY_HISTORY, JSON.stringify(hist)); }catch(e){}
+}
+
+function pushHistory(payload){
+  if(!payload || !payload.teams || !payload.teams.length) return;
+  const hist = loadHistory();
+  const entry = {
+    ts: Date.now(),
+    teamSizes: payload.teamSizes,
+    numPlayers: payload.teams.reduce((s,t)=>s+t.players.length, 0),
+    teams: payload.teams.map(t=>({
+      name: t.name,
+      players: t.players.map(o=>({
+        p: { id:o.p.id, prenom:o.p.prenom, nom:o.p.nom, poste:o.p.poste,
+             taille:o.p.taille, sexe:o.p.sexe, levelManual:o.p.levelManual, notes:o.p.notes },
+        sc: o.sc, level: o.level
+      })),
+      total: t.total, avg: t.avg, target: t.target, counts: {...t.counts}
+    })),
+    bench: (payload.bench||[]).map(o=>({
+      p: { id:o.p.id, prenom:o.p.prenom, nom:o.p.nom },
+      sc: o.sc, level: o.level
+    }))
+  };
+  hist.unshift(entry);
+  saveHistory(hist.slice(0, MAX_HISTORY));
+}
+
+function openHistory(){
+  const hist = loadHistory();
+  const listEl = document.getElementById("historyList");
+  listEl.innerHTML = "";
+
+  if(!hist.length){
+    listEl.innerHTML = '<div class="hint" style="text-align:center;padding:20px">Aucune génération enregistrée.</div>';
+  } else {
+    hist.forEach((entry, idx) => {
+      const date = new Date(entry.ts);
+      const dateStr = date.toLocaleDateString("fr-FR", {day:"2-digit",month:"2-digit",year:"2-digit"});
+      const timeStr = date.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"});
+      const format  = (entry.teamSizes||[]).join(",") || "?";
+      const nbPlayers = entry.numPlayers || "?";
+
+      const teamPills = (entry.teams||[]).map(t=>
+        `<span class="history-team-pill">${escapeHtml(t.name)}: ${t.players.length}j</span>`
+      ).join("");
+
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `
+        <div class="history-item-info">
+          <div class="history-item-date">${dateStr} à ${timeStr}</div>
+          <div class="history-item-meta">${nbPlayers} joueurs · Format ${escapeHtml(format)}</div>
+          <div class="history-item-teams">${teamPills}</div>
+        </div>
+        <button class="btn small ok" data-idx="${idx}" type="button">Restaurer</button>`;
+
+      item.querySelector("button").addEventListener("click", ()=>{
+        restoreHistory(entry);
+        closeHistory();
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById("historyOverlay").classList.remove("hidden");
+  document.getElementById("historyOverlay").setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeHistory(){
+  document.getElementById("historyOverlay").classList.add("hidden");
+  document.getElementById("historyOverlay").setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+
+function restoreHistory(entry){
+  if(!entry || !entry.teams) return;
+  // Re-lier les joueurs aux instances live de state.players
+  const playerMap = new Map(state.players.map(p=>[p.id, p]));
+  const teams = entry.teams.map(t=>({
+    ...t,
+    players: t.players.map(o=>({
+      ...o,
+      p: playerMap.get(o.p?.id) || o.p
+    })).filter(o=>o.p)
+  }));
+  const payload = { teams, bench: entry.bench||[], teamSizes: entry.teamSizes||[] };
+  state.lastTeams = payload;
+  saveAll();
+  renderTeams(payload);
+  showToast("Génération restaurée ✅", "ok");
+}
+
+document.getElementById("btnHistory")?.addEventListener("click", openHistory);
+// historyBack est dans le HTML après le script → attendre le DOM
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", ()=>{
+    document.getElementById("historyBack")?.addEventListener("click", closeHistory);
+  });
+} else {
+  document.getElementById("historyBack")?.addEventListener("click", closeHistory);
+}
+
+/* ══════════════════════════════════════════════════════════
+   INCOMPATIBILITÉS
+══════════════════════════════════════════════════════════ */
+
+// ── Helpers ──────────────────────────────────────────────
+function addIncompat(idA, idB){
+  const pA = state.players.find(p=>p.id===idA);
+  const pB = state.players.find(p=>p.id===idB);
+  if(!pA||!pB||idA===idB) return;
+  if(!Array.isArray(pA.incompatibles)) pA.incompatibles=[];
+  if(!Array.isArray(pB.incompatibles)) pB.incompatibles=[];
+  if(!pA.incompatibles.includes(idB)) pA.incompatibles.push(idB);
+  if(!pB.incompatibles.includes(idA)) pB.incompatibles.push(idA);
+}
+function removeIncompat(idA, idB){
+  const pA = state.players.find(p=>p.id===idA);
+  const pB = state.players.find(p=>p.id===idB);
+  if(pA) pA.incompatibles = (pA.incompatibles||[]).filter(x=>x!==idB);
+  if(pB) pB.incompatibles = (pB.incompatibles||[]).filter(x=>x!==idA);
+}
+function playerName(p){ return (p.prenom+" "+(p.nom||"")).trim(); }
+
+// ── Dans la fiche joueur : autocomplete + tags ────────────
+function initIncompatForm(){
+  const input    = document.getElementById("incompatInput");
+  const dropdown = document.getElementById("incompatDropdown");
+  const list     = document.getElementById("incompatList");
+  if(!input) return;
+
+  function renderTags(){
+    if(!_editPlayerRef) return;
+    list.innerHTML = "";
+    (_editPlayerRef.incompatibles||[]).forEach(id=>{
+      const other = state.players.find(p=>p.id===id);
+      if(!other) return;
+      const tag = document.createElement("span");
+      tag.style.cssText = "display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:rgba(187,107,217,.2);border:1px solid rgba(187,107,217,.4);font-size:12px;";
+      tag.innerHTML = `🚫 ${escapeHtml(playerName(other))} <button type="button" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0;line-height:1" data-id="${id}">×</button>`;
+      tag.querySelector("button").addEventListener("click", ()=>{
+        removeIncompat(_editPlayerRef.id, id);
+        renderTags();
+        saveAll();
+      });
+      list.appendChild(tag);
+    });
+  }
+
+  input.addEventListener("input", ()=>{
+    const q = normalizeName(input.value);
+    dropdown.innerHTML = "";
+    if(!q || !_editPlayerRef){ dropdown.style.display="none"; return; }
+    const matches = state.players.filter(p=>
+      p.id !== _editPlayerRef.id &&
+      !(_editPlayerRef.incompatibles||[]).includes(p.id) &&
+      normalizeName(playerName(p)).includes(q)
+    ).slice(0,8);
+    if(!matches.length){ dropdown.style.display="none"; return; }
+    matches.forEach(p=>{
+      const row = document.createElement("div");
+      row.style.cssText = "padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px;";
+      row.textContent = playerName(p) + " · " + getPlayerLevel(p);
+      row.addEventListener("mousedown", e=>{ e.preventDefault();
+        addIncompat(_editPlayerRef.id, p.id);
+        input.value = "";
+        dropdown.style.display = "none";
+        renderTags();
+        saveAll();
+      });
+      dropdown.appendChild(row);
+    });
+    dropdown.style.display = "block";
+  });
+
+  document.addEventListener("click", e=>{
+    if(!e.target.closest("#incompatSearch")) dropdown.style.display="none";
+  });
+
+  // Expose renderTags so openPlayerForm can call it
+  window._renderIncompatTags = renderTags;
+}
+
+// Call once DOM ready
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded", initIncompatForm);
+} else {
+  initIncompatForm();
+}
+
+// ── Écran dédié ──────────────────────────────────────────
+function openIncompat(){
+  const el = document.getElementById("incompatOverlay");
+  const listEl = document.getElementById("incompatGlobalList");
+  listEl.innerHTML = "";
+
+  // Collect all pairs (avoid duplicates)
+  const seen = new Set();
+  const pairs = [];
+  state.players.forEach(p=>{
+    (p.incompatibles||[]).forEach(id=>{
+      const key = [p.id,id].sort().join("|");
+      if(!seen.has(key)){
+        seen.add(key);
+        const other = state.players.find(x=>x.id===id);
+        if(other) pairs.push([p, other]);
+      }
+    });
+  });
+
+  if(!pairs.length){
+    listEl.innerHTML = '<div class="hint" style="text-align:center;padding:20px">Aucune incompatibilité définie.</div>';
+  } else {
+    pairs.forEach(([pA, pB])=>{
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `
+        <div class="history-item-info">
+          <div class="history-item-date">🚫 ${escapeHtml(playerName(pA))} <span style="color:var(--muted)">avec</span> ${escapeHtml(playerName(pB))}</div>
+          <div class="history-item-meta">${escapeHtml(getPlayerLevel(pA))} · ${escapeHtml(pA.poste||"non défini")} &nbsp;—&nbsp; ${escapeHtml(getPlayerLevel(pB))} · ${escapeHtml(pB.poste||"non défini")}</div>
+        </div>
+        <button class="btn small bad" type="button">Retirer</button>`;
+      item.querySelector("button").addEventListener("click", ()=>{
+        removeIncompat(pA.id, pB.id);
+        saveAll();
+        openIncompat(); // refresh
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  el.classList.remove("hidden");
+  el.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+}
+function closeIncompat(){
+  document.getElementById("incompatOverlay").classList.add("hidden");
+  document.getElementById("incompatOverlay").setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+}
+
+document.getElementById("btnIncompat")?.addEventListener("click", openIncompat);
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded", ()=>{
+    document.getElementById("incompatBack")?.addEventListener("click", closeIncompat);
+  });
+} else {
+  document.getElementById("incompatBack")?.addEventListener("click", closeIncompat);
+}
 </script>
+
+
+<!-- Custom Confirm Modal (PWA-safe, replaces native confirm()) -->
+<div id="tbvConfirm" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:#1a2030;border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px 20px;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:16px;">
+    <div id="tbvConfirmMsg" style="color:#fff;font-size:15px;text-align:center;line-height:1.5;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="tbvConfirmNo"  style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;">Annuler</button>
+      <button id="tbvConfirmYes" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e67e22;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INCOMPATIBILITÉS ══════════════════════════════════ -->
+<div class="rateOverlay hidden" id="incompatOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="incompatTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="incompatBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="incompatTitle">Incompatibilités</b>
+          <span>Joueurs qui ne peuvent pas être dans la même équipe</span>
+        </div>
+      </div>
+    </div>
+    <div class="rateBody">
+      <div id="incompatGlobalList" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HISTORIQUE DES GÉNÉRATIONS ══════════════════════ -->
+<div class="rateOverlay hidden" id="historyOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="historyBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="historyTitle">Historique des générations</b>
+          <span>5 dernières — cliquer pour restaurer</span>
+        </div>
+      </div>
+    </div>
+    <div class="rateBody">
+      <div id="historyList" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODE TERRAIN ══════════════════════════════════════ -->
+<div id="terrainOverlay" role="dialog" aria-label="Mode terrain">
+  <div class="terrain-hint"><span>← swipe →</span> entre équipes &nbsp;·&nbsp; swipe ↓ pour fermer</div>
+  <div style="position:absolute;top:14px;left:14px;z-index:10;">
+    <button class="btn small" id="btnShareTerrain" type="button" style="font-size:12px;padding:5px 10px;">📤</button>
+  </div>
+  <div class="terrain-slider" id="terrainSlider"></div>
+  <div class="terrain-dots" id="terrainDots"></div>
+  <button class="terrain-close" id="terrainClose" aria-label="Fermer">✕</button>
+</div>
 
 </body>
 </html>
