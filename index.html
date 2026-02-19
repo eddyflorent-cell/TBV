@@ -383,14 +383,15 @@
     .terrain-hint span{ opacity:.5; }
 
     .terrain-slider{
-      flex:1; display:flex; overflow:hidden; position:relative;
+      flex:1; overflow:hidden; position:relative;
     }
     .terrain-slide{
-      min-width:100%; height:100%;
+      position:absolute; top:0; left:0; width:100%; height:100%;
       display:flex; flex-direction:column;
       padding:16px 14px 20px;
       box-sizing:border-box;
       transition: transform .35s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
     }
     .terrain-team-name{
       font-size:clamp(32px,10vw,56px); font-weight:900;
@@ -3928,9 +3929,9 @@ document.addEventListener("keydown", (e)=>{
 
   function renderSlide(idx){
     currentIdx = Math.max(0, Math.min(idx, slides.length-1));
-    const offset = -currentIdx * 100;
     slides.forEach((s, i) => {
-      s.style.transform = `translateX(${(i - currentIdx)*100}%)`;
+      // Each slide is placed at i*100% from left, then shifted left by currentIdx*100%
+      s.style.transform = `translateX(${(i - currentIdx) * 100}%)`;
     });
     dotsEl.querySelectorAll(".terrain-dot").forEach((d,i)=>{
       d.classList.toggle("active", i===currentIdx);
