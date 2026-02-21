@@ -692,7 +692,9 @@
     </div>
     <div class="bd">
       <div class="teams" id="teams"></div>
-      <div class="swipe-hint" id="swipeHint" style="display:none">↑ Swipe vers le haut pour le mode terrain</div>
+      <div id="swipeHint" style="display:none; margin-top:10px; text-align:center;">
+        <button class="btn primary" id="btnTerrain" type="button">📋 Mode terrain</button>
+      </div>
       <div id="shareRow" style="display:none; margin-top:10px; text-align:center;">
         <button class="btn small" id="btnShare" type="button">📤 Partager les équipes</button>
       </div>
@@ -3979,26 +3981,10 @@ document.addEventListener("keydown", (e)=>{
     if(e.key==="Escape")     closeTerrain();
   });
 
-  // ── Swipe UP from teams area to open terrain ─────────────
-  let upStartY = 0, upStartX = 0;
-  document.addEventListener("touchstart", e=>{
-    if(overlay.classList.contains("active")) return;
-    upStartY = e.touches[0].clientY;
-    upStartX = e.touches[0].clientX;
-  }, {passive:true});
-  document.addEventListener("touchend", e=>{
-    if(overlay.classList.contains("active")) return;
-    const dy = e.changedTouches[0].clientY - upStartY;
-    const dx = e.changedTouches[0].clientX - upStartX;
-    if(dy < -80 && Math.abs(dy) > Math.abs(dx)*1.5){
-      // Only if touch started within or below the teams area
-      const rect = teamsArea.getBoundingClientRect();
-      if(upStartY >= rect.top - 60) openTerrain();
-    }
-  }, {passive:true});
-
-  // Expose for potential external call
+  // Expose for external call (button)
   window.openTerrainMode = openTerrain;
+
+  document.getElementById("btnTerrain")?.addEventListener("click", openTerrain);
   } // end initTerrain
 
   if(document.readyState === "loading"){
