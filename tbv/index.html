@@ -1,0 +1,4410 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Team Balancer Volley (Auto) – V4</title>
+    <meta name="theme-color" content="#070b11" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+<style>
+    :root{
+      --bg:#070b11;
+      --card:#0f1726;
+      --muted:#c5cfde;
+      --txt:#f2f6ff;
+      --line:rgba(255,255,255,.18);
+      --accent:#ff6a3d;
+      --accent2:#63b3ff;
+
+      /* daltonisme-friendly (ne pas coder “ok/warn/bad” uniquement par couleur) */
+      --ok:#2f80ed;
+      --warn:#f2c94c;
+      --bad:#bb6bd9;
+
+      --r:18px;
+      --pad:14px;
+      --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --chip: rgba(255,255,255,.10);
+    }
+
+    /* Thème "Funky" (plus clair, plus punchy) */
+    html[data-theme="funky"]{
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --muted:#334155;
+      --txt:#0b1220;
+      --line:rgba(2,6,23,.18);
+      --chip: rgba(2,6,23,.06);
+      --shadow: 0 18px 50px rgba(2,6,23,.12);
+    }
+    html[data-theme="funky"] body{
+      background:
+        radial-gradient(1100px 650px at 10% -10%, rgba(99,179,255,.45), transparent 60%),
+        radial-gradient(900px 520px at 95% 5%, rgba(255,106,61,.35), transparent 55%),
+        radial-gradient(900px 520px at 60% 110%, rgba(242,201,76,.35), transparent 60%),
+        var(--bg);
+    }
+    html[data-theme="funky"] input,
+    html[data-theme="funky"] select,
+    html[data-theme="funky"] textarea{
+      background: rgba(255,255,255,.92);
+      color: var(--txt);
+      border-color: rgba(2,6,23,.18);
+    }
+    html[data-theme="funky"] .rateHeader,
+    html[data-theme="funky"] .rateFooter{
+      background: rgba(255,255,255,.85);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(99,179,255,.25), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(255,106,61,.20), transparent 55%),
+                  var(--bg);
+      color:var(--txt);
+    }
+    header{ position: static; background:transparent; border-bottom:0; }
+    .wrap{max-width:1100px;margin:0 auto;padding:14px;}
+    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between;}
+    .brand{display:flex; gap:10px; align-items:center;}
+    .logo{width:34px;height:34px;border-radius:12px;background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: var(--shadow);}
+    .hgroup h1{font-size:16px;margin:0}
+    .hgroup p{font-size:12px;margin:2px 0 0;color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.10);
+      color:var(--txt);
+      border-radius: 14px;
+      padding:10px 12px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.15s;
+      user-select:none;
+      touch-action:manipulation;
+    }
+    .btn:hover{transform: translateY(-1px)}
+    .btn:active{transform: translateY(0px); opacity:.92}
+    .btn.primary{background: linear-gradient(135deg, rgba(255,106,61,.95), rgba(242,201,76,.90)); border-color: transparent}
+    .btn.blue{background: linear-gradient(135deg, rgba(99,179,255,.95), rgba(99,179,255,.70)); border-color: transparent}
+    .btn.ok{background: linear-gradient(135deg, rgba(47,128,237,.95), rgba(47,128,237,.60)); border-color: transparent}
+    .btn.danger{background: linear-gradient(135deg, rgba(187,107,217,.95), rgba(187,107,217,.60)); border-color: transparent}
+    .btn.ghost{background: transparent}
+    .btn.small{padding:8px 10px; font-size:12px; border-radius: 12px}
+    .btn:focus-visible{outline: 3px solid rgba(242,201,76,.70); outline-offset: 2px;}
+
+    .grid{display:grid; grid-template-columns: 1.25fr .75fr; gap:14px; margin-top:14px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: var(--pad);
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    }
+    .card .bd{padding: var(--pad)}
+    .title{font-weight:900; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:12px; margin-top:4px}
+
+    label{font-size:12px;color:var(--muted);display:block;margin:0 0 6px}
+    input, select, textarea{
+      width:100%;
+      border:1px solid rgba(255,255,255,.24);
+      background: rgba(0,0,0,.38);
+      color:var(--txt);
+      border-radius: 12px;
+      padding:10px 10px;
+      outline:none;
+    }
+    input:focus, select:focus, textarea:focus{
+      outline: 3px solid rgba(99,179,255,.65);
+      outline-offset: 2px;
+      border-color: rgba(99,179,255,.75);
+    }
+    textarea{min-height:70px; resize:vertical}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:520px){.two{grid-template-columns:1fr}}
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.22);
+      background: var(--chip);
+      font-size:12px;
+      color:var(--txt);
+    }
+    .hr{height:2px;background:var(--line);margin:12px 0}
+    .hint{font-size:12px;color:var(--muted)}
+    .muted{color:var(--muted)}
+
+    .list{display:flex; flex-direction:column; gap:8px;}
+    .playerRow{
+      display:grid;
+      grid-template-columns: 26px 26px 1fr auto auto;
+      gap:10px;
+      align-items:center;
+      padding:10px;
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(0,0,0,.28);
+      border-radius: 14px;
+    }
+    .playerRow .name{font-weight:850}
+    .meta{font-size:12px;color:var(--muted)}
+    .pill{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:2px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.06);
+      white-space:nowrap;
+    }
+    .pill.neutral{border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.06)}
+    .pill.ok{
+      border-color: rgba(47,128,237,.70);
+      background: repeating-linear-gradient(135deg, rgba(47,128,237,.18) 0px, rgba(47,128,237,.18) 6px, rgba(47,128,237,.06) 6px, rgba(47,128,237,.06) 12px);
+    }
+    .pill.warn{
+      border-color: rgba(242,201,76,.75);
+      background: repeating-linear-gradient(135deg, rgba(242,201,76,.18) 0px, rgba(242,201,76,.18) 6px, rgba(242,201,76,.06) 6px, rgba(242,201,76,.06) 12px);
+    }
+    .pill.bad{
+      border-color: rgba(187,107,217,.75);
+      background: repeating-linear-gradient(135deg, rgba(187,107,217,.18) 0px, rgba(187,107,217,.18) 6px, rgba(187,107,217,.06) 6px, rgba(187,107,217,.06) 12px);
+    }
+
+    .teams{display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;}
+    @media (max-width:980px){.teams{grid-template-columns:1fr}}
+    .teamCard{border:1px solid var(--line); border-radius: var(--r); background: rgba(0,0,0,.14); overflow:hidden;}
+    .teamHd{padding:12px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:10px; align-items:center;}
+    .teamHd .k{font-weight:900}
+    .teamBd{padding:12px; display:flex; flex-direction:column; gap:8px}
+    .mini{display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:12px; color:var(--muted)}
+    .mini b{color:var(--txt)}
+    .playerChip{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:10px;
+      border:1px solid rgba(255,255,255,.20);
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+      transition: opacity .15s, transform .15s, border-color .15s;
+    }
+    .playerChip[draggable="true"]{ cursor: grab; }
+    .playerChip[draggable="true"]:active{ cursor: grabbing; }
+    .playerChip.dragging{ opacity:.35; transform:scale(.97); }
+    .drag-handle{ font-size:14px; color:var(--muted); padding-right:4px; user-select:none; flex-shrink:0; }
+    .touch-ghost{
+      position:fixed; z-index:99999; pointer-events:none;
+      opacity:.85; transform:scale(1.04) rotate(1.5deg);
+      box-shadow: 0 8px 30px rgba(0,0,0,.5);
+      background: var(--card,#1e2430); border:1px solid var(--accent,#63b3ff);
+      border-radius:14px; padding:10px 14px;
+      font-size:13px; color:#fff; white-space:nowrap;
+      transition: none;
+    }
+    .teamCard.drag-over .list{
+      outline: 2px dashed var(--accent);
+      outline-offset: 4px;
+      border-radius: 10px;
+      background: rgba(99,179,255,.06);
+    }
+    .teamCard.drag-over{ border-color: var(--accent); }
+    .playerChip .left{display:flex;flex-direction:column}
+    .playerChip .left .n{font-weight:850}
+    .playerChip .left .m{font-size:12px;color:var(--muted)}
+    .score{
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(99,179,255,.18);
+      border:2px solid rgba(99,179,255,.55);
+      font-size:12px;
+    }
+
+    .footer{position: static; padding: 12px 0 0; border-top: 1px solid var(--line); background: transparent;}
+    .footer .wrap2{padding: 0 14px 14px;}
+
+    .hidden{display:none !important}
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:18px; z-index:80;
+      background: rgba(0,0,0,.88);
+      border:1px solid rgba(255,255,255,.22);
+      padding:10px 12px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      font-size:13px;
+      max-width: min(520px, calc(100vw - 24px));
+    }
+
+    /* Overlays */
+    .rateOverlay{
+      position: fixed; inset: 0; z-index: 60;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: stretch; justify-content: center;
+      padding: 12px;
+    }
+    .rateOverlay.hidden{ display:none !important; }
+    .rateSheet{
+      width: min(860px, 100%);
+      height: calc(100vh - 24px);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .rateHeader{
+      position: sticky; top: 0; z-index: 2;
+      background: rgba(11,15,20,.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      display:flex; gap:10px; align-items:center; justify-content: space-between;
+    }
+    .rateHeader .left{display:flex; gap:10px; align-items:center; min-width:0;}
+    .rateTitle{display:flex; flex-direction:column; min-width:0;}
+    .rateTitle b{font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .rateTitle span{font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .rateBody{padding: 12px; overflow:auto; flex:1;}
+    .rateCard{border:1px solid rgba(255,255,255,.20); background: rgba(0,0,0,.28); border-radius: var(--r); padding: 12px; margin-bottom: 12px;}
+    .rateFooter{
+      position: sticky; bottom:0; z-index:2;
+      background: rgba(11,15,20,.85);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--line);
+      padding: 10px 12px;
+      display:flex; gap:10px; justify-content:space-between; align-items:center;
+    }
+    .rateFooter .hint2{font-size:12px;color:var(--muted);}
+
+    /* Notation: criteria rows */
+    .criteriaList{display:flex; flex-direction:column; gap:10px;}
+    .critRow{
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(0,0,0,.28);
+      border-radius:14px;
+      padding:10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .critLeft{display:flex; flex-direction:column; gap:2px; min-width:0;}
+    .critLeft b{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .critLeft span{font-size:12px;color:var(--muted);}
+    .critRight{display:flex; gap:8px; align-items:center; flex-shrink:0;}
+    .stepBtn{
+      width: 38px; height: 38px;
+      border-radius: 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.10);
+      color: var(--txt);
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .stepVal{
+      min-width: 42px;
+      text-align:center;
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+    }
+
+    @media (max-width: 600px){
+      header .wrap{ padding: 10px 12px 12px !important; }
+      .topbar{ flex-direction: column; align-items: stretch; gap: 10px; }
+      .brand{ align-items: flex-start; }
+      .logo{ width: 28px; height: 28px; border-radius: 10px; }
+      .hgroup h1{ font-size: 14px; line-height: 1.15; }
+      .hgroup p{ font-size: 11px; line-height: 1.2; }
+      header .topbar .row{ width: 100%; justify-content: flex-start; gap: 8px; }
+      header .topbar .row .btn{ padding: 8px 10px; font-size: 12px; border-radius: 12px; }
+      .wrap{ padding: 12px !important; }
+      .playerRow .pill{ grid-column: 1 / -1; justify-self: start; margin-top: 6px; }
+      .playerRow .prActions{ grid-column: 1 / -1; display:flex; gap:8px; justify-content:flex-end; margin-top:6px; flex-wrap:wrap; }
+    }
+  
+    /* PWA/overlay usability fixes */
+    .rateHeader{flex-wrap:wrap}
+    .rateHeader .row{flex-wrap:wrap; justify-content:flex-end}
+    /* For the player form: show primary Save button in header on mobile, keep footer as secondary */
+    @media (max-width: 600px){
+      #playerOverlay .rateFooter{display:none;}
+      #playerOverlay .rateHeader .row{gap:8px}
+    }
+
+    /* ═══════════════════════════════════════════
+       HISTORIQUE
+    ═══════════════════════════════════════════ */
+    .history-item{
+      border:1px solid var(--line); border-radius:14px;
+      padding:14px; display:flex; align-items:center; gap:12px;
+      background:rgba(255,255,255,.03);
+    }
+    .history-item-info{ flex:1; }
+    .history-item-date{ font-weight:700; font-size:14px; }
+    .history-item-meta{ font-size:12px; color:var(--muted); margin-top:3px; }
+    .history-item-teams{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .history-team-pill{
+      font-size:11px; padding:2px 8px; border-radius:999px;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+    }
+
+    /* ═══════════════════════════════════════════
+       MODE TERRAIN
+    ═══════════════════════════════════════════ */
+    #terrainOverlay{
+      display:none; position:fixed; inset:0; z-index:9000;
+      background:var(--bg); overflow:hidden;
+    }
+    #terrainOverlay.active{ display:flex; flex-direction:column; }
+
+    .terrain-hint{
+      text-align:center; font-size:11px; color:var(--muted);
+      padding:6px 0 2px; letter-spacing:.05em; flex-shrink:0;
+    }
+    .terrain-hint span{ opacity:.5; }
+
+    .terrain-slider{
+      flex:1; overflow:hidden; position:relative; min-height:0;
+    }
+    .terrain-track{
+      display:flex; height:100%; width:100%;
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
+    }
+    .terrain-slide{
+      flex:0 0 100%; width:100%; height:100%;
+      display:flex; flex-direction:column;
+      padding:16px 14px 20px;
+      box-sizing:border-box;
+      overflow-y:auto;
+    }
+    .terrain-team-name{
+      font-size:clamp(32px,10vw,56px); font-weight:900;
+      letter-spacing:-.02em; line-height:1;
+      margin-bottom:4px;
+    }
+    .terrain-team-count{
+      font-size:14px; color:var(--muted); margin-bottom:16px;
+    }
+    .terrain-players{ display:flex; flex-direction:column; gap:10px; flex:1; overflow-y:auto; }
+    .terrain-player{
+      display:flex; align-items:center; gap:12px;
+      padding:12px 16px;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .terrain-player-name{ font-size:17px; font-weight:700; flex:1; }
+    .terrain-player-poste{
+      font-size:12px; color:var(--muted);
+      background:rgba(255,255,255,.08);
+      padding:3px 9px; border-radius:999px;
+      white-space:nowrap;
+    }
+    .terrain-player-level{
+      font-size:11px; padding:2px 8px; border-radius:999px; font-weight:600;
+    }
+    .terrain-player-level.fort{ background:rgba(47,128,237,.25); color:#63b3ff; }
+    .terrain-player-level.inter{ background:rgba(242,201,76,.2); color:#f2c94c; }
+    .terrain-player-level.deb{ background:rgba(187,107,217,.2); color:#bb6bd9; }
+
+    .terrain-dots{
+      display:flex; justify-content:center; gap:8px;
+      padding:10px 0 6px; flex-shrink:0;
+    }
+    .terrain-dot{
+      width:8px; height:8px; border-radius:50%;
+      background:rgba(255,255,255,.2);
+      transition:background .2s, transform .2s;
+    }
+    .terrain-dot.active{ background:var(--accent); transform:scale(1.3); }
+
+    .terrain-close{
+      position:absolute; top:14px; right:14px;
+      background:rgba(255,255,255,.08); border:none; border-radius:999px;
+      color:var(--txt); font-size:18px; width:36px; height:36px;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      z-index:10;
+    }
+
+    /* Couleurs par équipe */
+    .terrain-slide[data-team="A"] .terrain-team-name{ color:#ff6a3d; }
+    .terrain-slide[data-team="B"] .terrain-team-name{ color:#63b3ff; }
+    .terrain-slide[data-team="C"] .terrain-team-name{ color:#2ecc71; }
+    .terrain-slide[data-team="D"] .terrain-team-name{ color:#f2c94c; }
+    .terrain-slide[data-team="E"] .terrain-team-name{ color:#bb6bd9; }
+    .terrain-slide[data-team="F"] .terrain-team-name{ color:#ff9f43; }
+
+    /* Swipe hint sur la vue équipes */
+    .swipe-hint{
+      text-align:center; font-size:12px; color:var(--muted);
+      padding:8px 0 0; user-select:none; pointer-events:none;
+      opacity:.7;
+    }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="hgroup">
+          <h1>Team Balancer Volley (Auto) – V4</h1>
+          <p>Présences → Profil → Format → Générer (serpentin + contraintes)</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn small" id="btnExport" type="button">Exporter JSON</button>
+        <button class="btn small" id="btnImport" type="button">Importer JSON</button>
+        <button class="btn small" id="btnImportCSVPlayers" type="button">Importer CSV Joueurs</button>
+        <button class="btn small" id="btnImportCSVNotes" type="button">Importer CSV Notes</button>
+        <button class="btn small danger" id="btnReset" type="button">Reset</button>
+
+
+        <button class="btn small" id="btnExportCSVPlayers" type="button">Exporter CSV Joueurs</button>
+        <button class="btn small" id="btnExportCSVNotes" type="button">Exporter CSV Notes</button>
+        <button class="btn small ok" id="btnThemeToggle" type="button" title="Basculer clair/sombre">Mode Funky ✨</button>
+
+        <button class="btn small" id="btnTplPlayers" type="button">Joueurs_Template.csv</button>
+        <button class="btn small" id="btnTplNotes" type="button">Notes_Template.csv</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="title">Joueurs & Présences</div>
+          <div class="sub">Coche les présents. “Rotation équitable” = tout le monde joue à temps égal (suivi via “Rotations jouées”).</div>
+        </div>
+        <div class="row">
+          <span class="chip"><b id="cntTotal">0</b> joueurs</span>
+          <span class="chip"><b id="cntPresent">0</b> présents</span>
+          <button class="btn small blue" id="btnAddPlayer" type="button">+ Joueur</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="two">
+          <div>
+            <label>Recherche</label>
+            <input id="q" placeholder="Nom, poste, sexe, niveau…" />
+          </div>
+          <div>
+            <label>Filtre statut</label>
+            <select id="filterStatus">
+              <option value="Actif" selected>Actifs (recommandé)</option>
+              <option value="Tous">Tous (inclut blessés/absents)</option>
+            </select>
+          </div>
+        </div>
+        <div class="two" style="margin-top:10px">
+          <div>
+            <label>Filtre club</label>
+            <select id="filterClub">
+              <option value="Tous" selected>Tous les clubs</option>
+            </select>
+          </div>
+          <div>
+            <label class="muted">Astuce</label>
+            <div class="hint">Crée des groupes par club pour rappeler tes effectifs en 1 clic.</div>
+          </div>
+        </div>
+
+
+        <div class="hr"></div>
+
+        <div class="row" style="margin-bottom:10px">
+          <span class="chip"><b id="selCount">0</b> sélectionnés</span>
+          <button class="btn small" id="btnSelAll" type="button">Tout sélectionner</button>
+          <button class="btn small" id="btnSelNone" type="button">Tout désélectionner</button>
+
+          <button class="btn small ok" id="btnBulkPresent" type="button">Présent ✅</button>
+          <button class="btn small" id="btnBulkAbsent" type="button">Absent</button>
+
+          <button class="btn small blue" id="btnBulkActive" type="button">Statut: Actif</button>
+          <button class="btn small" id="btnBulkInactive" type="button">Statut: Inactif</button>
+
+          <button class="btn small danger" id="btnBulkDelete" type="button">Supprimer</button>
+        </div>
+
+        <div class="list" id="playerList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+      <div class="hd">
+        <div>
+          <div class="title">Paramètres de génération</div>
+          <div class="sub">Tu peux faire “terrain intensité” (meilleurs) ou “terrain progression” (débutants) — l’appli sert les deux.</div>
+        </div>
+        <span class="chip"><span class="muted">Seed</span> <b id="seedLabel">1</b></span>
+      </div>
+      <div class="bd">
+        <div class="two">
+          <div>
+            <label>Profil</label>
+            <select id="profile">
+              <option value="global" selected>Global (moyenne 10 critères)</option>
+              <option value="off">Offensif (pondéré)</option>
+              <option value="def">Défensif (pondéré)</option>
+            </select>
+          </div>
+          <div>
+            <label>Mode distribution</label>
+            <select id="mode">
+              <option value="snake" selected>Serpentin (équilibrage)</option>
+              <option value="roundrobin">Tourniquet (simple)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="two">
+          <div>
+            <label>Format rapide</label>
+            <select id="quickFormat">
+              <option value="6x6" selected>6x6 (2 équipes de 6)</option>
+              <option value="5x5">5x5 (2 équipes de 5)</option>
+              <option value="4x4">4x4 (2 équipes de 4)</option>
+              <option value="3x3">3x3 (2 équipes de 3)</option>
+              <option value="custom">Personnalisé</option>
+            </select>
+          </div>
+          <div>
+            <label>Tailles équipes (custom)</label>
+            <input id="customSizes" placeholder="ex: 3,3,3,3,4" disabled />
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="two">
+          <div>
+            <label>Gestion du surplus (si trop de présents)</label>
+            <select id="surplusPolicy">
+              <option value="rotate" selected>Rotation équitable (recommandé)</option>
+              <option value="top">Meilleurs scores (terrain intensité)</option>
+              <option value="random">Aléatoire</option>
+              <option value="first">Premiers cochés (ordre liste)</option>
+            </select>
+            <div class="hint" style="margin-top:6px">
+              Rotation équitable = l’appli choisit ceux qui ont le moins joué (played).
+            </div>
+          </div>
+          <div>
+            <label>Validation rotation</label>
+            <button class="btn ok" id="btnValidateRotation" type="button">Valider cette rotation ✅</button>
+            <div class="hint" style="margin-top:6px">
+              Clique après la rotation jouée (sinon l’équité ne peut pas être suivie).
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="two">
+          <div>
+            <label>Contraintes</label>
+            <div class="row">
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cTall" checked /> Équilibrer les grands
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cSetter" checked /> 1 passeur obligatoire/équipe
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cLibero" checked /> Limiter libéros/équipe
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cLevels" checked /> Équilibrer les niveaux
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cBeg1" checked /> Au moins 1 débutant / équipe
+              </label>
+              <label class="chip" style="cursor:pointer">
+                <input type="checkbox" id="cAttFort" checked /> 1 attaquant fort/équipe
+              </label>
+
+              <button class="btn small" id="btnSkillConstraints" type="button">Contraintes compétences</button>
+            </div>
+          </div>
+          <div>
+            <label>Seuil “grand” (cm)</label>
+            <input id="tallThreshold" type="number" value="185" min="150" max="220" />
+            <div class="hint" style="margin-top:6px">
+              Niveaux auto: Fort ≥ <b>7.0</b> • Intermédiaire 5.0–6.99 • Débutant &lt; 5.0
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <button class="btn primary" id="btnGenerate" type="button">Générer les équipes</button>
+          <button class="btn blue" id="btnReroll" type="button">Re-générer (shuffle)</button>
+          <button class="btn ghost" id="btnEditWeights" type="button">Voir pondérations</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="hint" id="genHint"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="hd">
+      <div>
+        <div class="title">Résultat</div>
+        <div class="sub">Chaque équipe affiche total/moyenne + compte (passeurs/libéros/grands + niveaux).</div>
+      </div>
+      <div class="row">
+        <span class="chip"><span class="muted">Écart total</span> <b id="gapTotal">—</b></span>
+        <span class="chip"><span class="muted">Écart moyenne</span> <b id="gapAvg">—</b></span>
+      </div>
+    </div>
+    <div class="bd">
+      <div class="teams" id="teams"></div>
+      <div class="swipe-hint" id="swipeHint" style="display:none">↑ Swipe vers le haut pour le mode terrain</div>
+      <div id="shareRow" style="display:none; margin-top:10px; text-align:center;">
+        <button class="btn small" id="btnShare" type="button">📤 Partager les équipes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="wrap2">
+    <div class="hint" id="footerHint">✅ Coche tes présents → Choisis profil + format → Génère.</div>
+    <div class="row">
+      <button class="btn small blue" id="btnGroups" type="button">Groupes</button>
+      <button class="btn small" id="btnHistory" type="button">📋 Historique</button>
+      <button class="btn small" id="btnIncompat" type="button">🚫 Incompatibilités</button>
+      <button class="btn small ok" id="btnSaveLocal" type="button">Sauver (local)</button>
+      <button class="btn small" id="btnLoadLocal" type="button">Charger (local)</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT JSON (coller / fichier) -->
+<div class="rateOverlay hidden" id="importOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="importHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="importBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="importHeaderTitle">Importer JSON</b>
+          <span>Choisir un fichier… ou coller un JSON</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small" id="importPickFile" type="button">Choisir fichier</button>
+        <button class="btn small ok" id="importApply" type="button">Importer ✅</button>
+      </div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">Coller JSON</div>
+        <textarea id="importTextarea" placeholder="Colle ici un export JSON complet…"></textarea>
+        <div class="hint" style="margin-top:8px">
+          Astuce mobile : reçois le JSON par WhatsApp / Mail → copie-colle ici → Importer ✅
+        </div>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2">Tu peux laisser vide et juste choisir un fichier.</div>
+      <div class="row">
+        <button class="btn small" id="importCancel" type="button">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT CSV (Joueurs / Notes) -->
+<div class="rateOverlay hidden" id="csvOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="csvHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="csvBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="csvHeaderTitle">Importer CSV</b>
+          <span id="csvHeaderSub">—</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small" id="csvPickFile" type="button">Choisir CSV</button>
+        <button class="btn small ok" id="csvDoImport" type="button">Importer ✅</button>
+      </div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="two">
+          <div>
+            <label>Mode</label>
+            <select id="csvMode">
+              <option value="merge" selected>Fusion (ajouter/mettre à jour)</option>
+              <option value="replace">Remplacement complet (dangereux)</option>
+            </select>
+          </div>
+          <div>
+            <label>Correspondance</label>
+            <select id="csvMatch">
+              <option value="id" selected>ID (recommandé)</option>
+              <option value="name">Prénom+Nom (tolérant)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="hint" id="csvRules"></div>
+        <div class="hr"></div>
+
+        <label>Ou coller le CSV</label>
+        <textarea id="csvTextarea" placeholder="Colle ici le contenu CSV si tu préfères (Excel/Sheets)…"></textarea>
+        <div class="hint" style="margin-top:8px" id="csvPreview">Aucun fichier chargé.</div>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2" id="csvFooterHint">Le CSV peut être en “;” ou “,”. Les entêtes peuvent être en français ou en “id/prenom/nom…”.</div>
+      <div class="row">
+        <button class="btn small" id="csvCancel" type="button">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTRAINTES COMPÉTENCES -->
+<div class="rateOverlay hidden" id="skillOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="skillHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="skillBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="skillHeaderTitle">Contraintes compétences</b>
+          <span>Limiter les “forts” sur un critère</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small" id="skillCancel" type="button">Annuler</button>
+</div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="two">
+          <div>
+            <label>Critère</label>
+            <select id="skillKey">
+              <option value="attaque">Attaque</option>
+              <option value="service">Service</option>
+              <option value="reception">Réception</option>
+              <option value="passe">Passe</option>
+              <option value="bloc">Bloc</option>
+              <option value="defense">Défense</option>
+              <option value="relance">Relance</option>
+              <option value="placement">Placement</option>
+              <option value="mental">Mental</option>
+              <option value="physique">Physique</option>
+            </select>
+          </div>
+          <div>
+            <label>Seuil “fort” (1–10)</label>
+            <input id="skillThreshold" type="number" min="1" max="10" step="1" value="8" />
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:10px">
+          <div>
+            <label>Max “forts” par équipe</label>
+            <input id="skillMaxPerTeam" type="number" min="0" max="12" step="1" value="1" />
+          </div>
+          <div>
+            <label class="chip" style="cursor:pointer;width:fit-content">
+              <input type="checkbox" id="skillHard" checked />
+              Filtre strict (refuse une équipe si dépasse)
+            </label>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="hint">
+          Exemple : Attaque ≥ 8, max 1 par équipe → évite de mettre tous les gros attaquants ensemble.
+        </div>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2">Sauver puis re-générer.</div>
+      <div class="row">
+        <button class="btn small ok" id="skillSave" type="button">Sauver ✅</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTATION JOUEUR -->
+<div class="rateOverlay hidden" id="rateOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="rateHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="rateBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="rateHeaderTitle">Notation joueur</b>
+          <span id="rateHeaderSub">—</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small danger" id="rateReset" type="button">Reset</button>
+</div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <div>
+            <div style="font-weight:900" id="rateName">—</div>
+            <div class="muted" style="font-size:12px" id="rateMeta">—</div>
+          </div>
+          <div class="row">
+            <span class="pill neutral" id="rateGlobalBadge">Global: —</span>
+            <span class="pill neutral" id="rateLevelBadge">Niveau: —</span>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="hint">
+          Rappel : “Global” = moyenne simple des 10 critères. Off/Def = pondéré.
+        </div>
+      </div>
+
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">10 critères (1 à 10)</div>
+        <div class="criteriaList" id="criteriaList"></div>
+
+        <div class="hr"></div>
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <div style="font-weight:900">Moyenne : <span id="rateAvg">—</span></div>
+          <button class="btn small" id="rateAll6" type="button">Tout mettre à 6</button>
+        </div>
+      </div>
+
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">Niveau (hybride)</div>
+        <div class="two">
+          <div>
+            <label>Auto</label>
+            <div class="hint">Basé sur la moyenne globale (Fort ≥ 7.0 / Inter 5.0–6.99 / Débutant &lt; 5.0)</div>
+          </div>
+          <div>
+            <label>Surcharge manuelle</label>
+            <select id="rateLevelManual">
+              <option value="auto" selected>Auto (recommandé)</option>
+              <option value="Fort">Fort</option>
+              <option value="Intermédiaire">Intermédiaire</option>
+              <option value="Débutant">Débutant</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">Notes du coach</div>
+        <textarea id="rateComment" placeholder="Ex: Très bon en relance, service irrégulier…"></textarea>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2">Annuler ou sauver.</div>
+      <div class="row">
+        <button class="btn small" id="rateCancel" type="button">Annuler</button>
+        <button class="btn small ok" id="rateSave" type="button">Sauver ✅</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PONDÉRATIONS -->
+<div class="rateOverlay hidden" id="weightsOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="weightsHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="weightsBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="weightsHeaderTitle">Pondérations</b>
+          <span>Ajuste l’importance des critères (1.0 = normal)</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small danger" id="weightsReset" type="button">Reset</button>
+</div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="hint" style="margin-bottom:10px">
+          Profil actif : <b id="weightsProfileLabel">—</b>
+        </div>
+        <div class="criteriaList" id="weightsList"></div>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2">Ces réglages influencent le score et donc la répartition.</div>
+      <div class="row">
+        <button class="btn small" id="weightsCancel" type="button">Annuler</button>
+        <button class="btn small ok" id="weightsSave" type="button">Sauver ✅</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AJOUT / ÉDITION JOUEUR -->
+<div class="rateOverlay hidden" id="playerOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="playerHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="playerBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="playerHeaderTitle">Ajouter un joueur</b>
+          <span id="playerHeaderSub">Créer une fiche joueur</span>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn small danger" id="playerDelete" style="display:none" type="button">Supprimer</button>
+        <!-- ✅ Mobile: bouton Enregistrer toujours visible en haut à droite -->
+        <button class="btn small ok" id="playerSave" type="button">Enregistrer ✅</button>
+      </div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">Identité</div>
+
+        <div class="two">
+          <div>
+            <label>Prénom *</label>
+            <input id="pPrenom" placeholder="Ex: Sarah" />
+          </div>
+          <div>
+            <label>Nom</label>
+            <input id="pNom" placeholder="Ex: Dupont" />
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:10px">
+          <div>
+            <label>Sexe</label>
+            <select id="pSexe">
+              <option value="Femme" selected>Femme</option>
+              <option value="Homme">Homme</option>
+              <option value="Autre">Autre</option>
+            </select>
+          </div>
+          <div>
+            <label>Taille (cm)</label>
+            <input id="pTaille" type="number" min="120" max="230" value="175" />
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:10px">
+          <div>
+            <label>Poste</label>
+            <select id="pPoste">
+              <option value="non défini" selected>non défini</option>
+              <option value="Passeur">Passeur</option>
+              <option value="Libéro">Libéro</option>
+              <option value="Central">Central</option>
+              <option value="Récep-Att">Récep-Att</option>
+              <option value="Pointu">Pointu</option>
+            </select>
+          </div>
+          <div>
+            <label>Statut</label>
+            <select id="pStatut">
+              <option value="Actif" selected>Actif</option>
+              <option value="Blessé">Blessé</option>
+              <option value="Absent long terme">Absent long terme</option>
+              <option value="Inactif">Inactif</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="two" style="margin-top:10px">
+          <div>
+            <label>Clubs (plusieurs possibles)</label>
+            <input id="pClub" placeholder="Ex: PUC, Paris Beach Volley, CapNord (sépare par des virgules)" />
+            <div class="hint" style="margin-top:6px">Astuce : sépare par des virgules. Le filtre “club” matche si le joueur appartient à l’un des clubs.</div>
+          </div>
+          <div>
+            <label>Groupe (optionnel)</label>
+            <div class="hint">Les groupes se créent via le bouton <b>Groupes</b> (en bas).</div>
+          </div>
+        </div>
+
+	        <div class="two" style="margin-top:10px">
+	          <div>
+	            <label>Niveau</label>
+	            <select id="pNiveau">
+	              <option value="auto" selected>Auto</option>
+	              <option value="Fort">Fort</option>
+	              <option value="Intermédiaire">Intermédiaire</option>
+	              <option value="Débutant">Débutant</option>
+	            </select>
+	            <div class="hint" style="margin-top:6px">
+	              Auto = calculé via la moyenne globale (modifiable ensuite dans “Noter”).
+	            </div>
+	          </div>
+	          <div>
+	            <label>Présence</label>
+	            <select id="pPresent">
+	              <option value="0" selected>Absent</option>
+	              <option value="1">Présent</option>
+	            </select>
+	          </div>
+	        </div>
+        </div>
+
+        <div class="hr"></div>
+        <div>
+          <label>Ne joue pas avec <span class="muted" style="font-weight:400;font-size:11px">(contrainte dure)</span></label>
+          <div id="incompatSearch" style="position:relative;margin-bottom:8px">
+            <input id="incompatInput" placeholder="Chercher un joueur à exclure…" autocomplete="off"
+              style="width:100%;box-sizing:border-box" />
+            <div id="incompatDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;
+              background:var(--card);border:1px solid var(--line);border-radius:10px;max-height:180px;overflow-y:auto;margin-top:2px"></div>
+          </div>
+          <div id="incompatList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:24px"></div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="hint">
+          Notes (10 critères) : initialisées à <b>6/10</b>. Tu ajustes ensuite via “Noter”.
+        </div>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2">Astuce : sur mobile, utilise <b>Enregistrer</b> en haut à droite.</div>
+      <div class="row">
+        <button class="btn small" id="playerCancel" type="button">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- GROUPES (multi-club) -->
+<div class="rateOverlay hidden" id="groupsOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="groupsHeaderTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="groupsBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="groupsHeaderTitle">Groupes & Clubs</b>
+          <span>Crée des groupes sauvegardés (par club, créneau, équipe A/B…)</span>
+        </div>
+      </div>
+      <div class="row">
+</div>
+    </div>
+
+    <div class="rateBody">
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">Nouveau groupe</div>
+        <div class="two">
+          <div>
+            <label>Nom du groupe *</label>
+            <input id="gName" placeholder="Ex: PUC - Mardi 20h, Beach - Niveau Inter…" />
+          </div>
+          <div>
+            <label>Club (optionnel)</label>
+            <input id="gClub" placeholder="Ex: PUC" />
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="two">
+          <div>
+            <label>Filtre joueurs</label>
+            <select id="gFilterClub">
+              <option value="Tous" selected>Tous les clubs</option>
+            </select>
+          </div>
+          <div>
+            <label>Actions rapides</label>
+            <div class="row">
+              <button class="btn small" id="gSelAll" type="button">Tout cocher</button>
+              <button class="btn small" id="gSelNone" type="button">Tout décocher</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="hint" style="margin-bottom:8px">Sélectionne les adhérents de ce groupe :</div>
+        <div class="list" id="gPlayersList"></div>
+      </div>
+
+      <div class="rateCard">
+        <div class="title" style="margin-bottom:8px">Groupes sauvegardés</div>
+        <div class="hint" style="margin-bottom:10px">“Rappeler” = coche les présents exactement comme le groupe. “Sélectionner” = marque la sélection (utile pour actions en lot).</div>
+        <div class="list" id="gSavedList"></div>
+      </div>
+    </div>
+
+    <div class="rateFooter">
+      <div class="hint2">Les groupes sont sauvegardés en local (dans ton navigateur).</div>
+      <div class="row">
+        <button class="btn small" id="groupsCancel" type="button">Fermer</button>
+        <button class="btn small ok" id="groupsSave" type="button">Sauver le groupe ✅</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast hidden" id="toast"></div>
+
+<input class="hidden" id="fileInputJSON" type="file" accept="application/json,.json" />
+<input class="hidden" id="fileInputCSV" type="file" accept="text/csv,.csv" />
+
+<script>
+/** ---------------------------
+ *  DATA MODEL
+ *  ---------------------------
+ * player = {
+ *   id, prenom, nom, sexe, taille, poste, statut, clubs,
+ *   notes: {service,reception,passe,attaque,bloc,defense,relance,placement,mental,physique},
+ *   present: bool,
+ *   selected: bool,
+ *   comment: string,
+ *   played: number,
+ *   levelManual: "auto" | "Fort" | "Intermédiaire" | "Débutant"
+ * }
+ */
+const KEY_LOCAL   = "team_balancer_volley_v4";
+const KEY_HISTORY = "team_balancer_history_v1";
+const MAX_HISTORY = 5;
+let SEED = 1;
+
+const CRIT_KEYS = ["service","reception","passe","attaque","bloc","defense","relance","placement","mental","physique"];
+const CRIT_LABELS = {
+  service:"Service", reception:"Réception", passe:"Passe", attaque:"Attaque", bloc:"Bloc",
+  defense:"Défense", relance:"Relance", placement:"Placement", mental:"Mental", physique:"Physique",
+  taille:"Taille / Hauteur"
+};
+const CRIT_HELP = {
+  service:"Qualité & régularité du service",
+  reception:"Stabilité sur service adverse",
+  passe:"Précision de la passe",
+  attaque:"Efficacité en attaque",
+  bloc:"Timing & lecture au bloc",
+  defense:"Qualité de défense au sol",
+  relance:"Capacité à relancer propre",
+  placement:"Placement / lecture du jeu",
+  mental:"Gestion pression / confiance",
+  physique:"Explosivité / endurance"
+};
+
+function mkPlayer(id, prenom, nom, sexe, taille, poste, statut){
+  const base = {service:6,reception:6,passe:6,attaque:6,bloc:6,defense:6,relance:6,placement:6,mental:6,physique:6};
+  return { id, prenom, nom, sexe, taille, poste, statut, clubs: [], notes: {...base}, present:false, selected:false, comment:"", played:0, levelManual:"auto" };
+}
+
+const defaultPlayers = [
+  mkPlayer("J001","Sarah","", "Femme", 178, "Récep-Att", "Actif"),
+  mkPlayer("J002","Inès","", "Femme", 172, "Passeur", "Actif"),
+  mkPlayer("J003","Lina","", "Femme", 175, "Central", "Actif"),
+  mkPlayer("J004","Maya","", "Femme", 170, "Libéro", "Actif"),
+  mkPlayer("J005","Eddy","", "Homme", 180, "Pointu", "Actif"),
+  mkPlayer("J006","Chris","", "Homme", 190, "Central", "Actif"),
+];
+
+let state = {
+  players: structuredClone(defaultPlayers),
+  lastTeams: null,
+  manualDragDone: false,
+  skillConstraint: null,
+  groups: []
+};
+
+/** ---------------------------
+ *  WEIGHTS (profiles)
+ *  --------------------------- */
+let weights = {
+  global: {
+    service: 1.0, reception: 2.0, passe: 1.5, attaque: 2.0, bloc: 1.5,
+    defense: 2.0, relance: 1.5, placement: 2.0, mental: 2.0, physique: 1.5,
+    taille: 1.5
+  },
+  off: {
+    service: 2.2, reception: 1.4, passe: 1.2, attaque: 2.6, bloc: 2.1,
+    defense: 1.4, relance: 1.2, placement: 1.3, mental: 1.5, physique: 2.0,
+    taille: 1.8
+  },
+  def: {
+    service: 1.2, reception: 2.6, passe: 1.8, attaque: 1.4, bloc: 1.2,
+    defense: 2.6, relance: 2.1, placement: 2.4, mental: 2.2, physique: 1.4,
+    taille: 1.2
+  }
+};
+
+function heightToNote(cm){
+  const v = 1 + ((Number(cm || 0) - 150) / (210 - 150)) * 9;
+  return Math.max(1, Math.min(10, v));
+}
+function avg10(notes){
+  let sum = 0;
+  for(const k of CRIT_KEYS) sum += Number(notes?.[k] ?? 0);
+  return sum / CRIT_KEYS.length;
+}
+function autoLevelFromGlobal(globalAvg){
+  if(globalAvg >= 7.0) return "Fort";
+  if(globalAvg >= 5.0) return "Intermédiaire";
+  return "Débutant";
+}
+function getPlayerLevel(p){
+  const manual = String(p?.levelManual || "auto");
+  if(manual && manual !== "auto") return manual;
+  return autoLevelFromGlobal(avg10(p?.notes || {}));
+}
+
+function scorePlayer(p, profileKey){
+  // IMPORTANT : "global" = vraie moyenne des 10 critères (sans taille, sans pondération)
+  if(profileKey === "global"){
+    return avg10(p?.notes || {});
+  }
+
+  // "off" et "def" = pondéré (et la taille peut compter)
+  const w = weights[profileKey] || weights.off;
+  let sum=0, wsum=0;
+
+  for(const k of Object.keys(w)){
+    const v = (k === "taille")
+      ? heightToNote(p.taille)
+      : Number(p.notes?.[k] ?? 0);
+
+    const wk = Number(w[k] ?? 1);
+    sum += v * wk;
+    wsum += wk;
+  }
+  return wsum ? (sum/wsum) : 0;
+}
+
+/** ---------------------------
+ *  UI HOOKS
+ *  --------------------------- */
+const $ = (id)=>document.getElementById(id);
+
+const selCount = $("selCount");
+const btnSelAll = $("btnSelAll");
+const btnSelNone = $("btnSelNone");
+const btnBulkPresent = $("btnBulkPresent");
+const btnBulkAbsent = $("btnBulkAbsent");
+const btnBulkActive = $("btnBulkActive");
+const btnBulkInactive = $("btnBulkInactive");
+const btnBulkDelete = $("btnBulkDelete");
+
+const playerList = $("playerList");
+const btnAddPlayer = $("btnAddPlayer");
+
+// Overlay ajout joueur
+const playerOverlay = $("playerOverlay");
+const playerBack = $("playerBack");
+const playerCancel = $("playerCancel");
+const playerSave = $("playerSave");
+const playerDelete = $("playerDelete");
+
+const pPrenom = $("pPrenom");
+const pNom = $("pNom");
+const pSexe = $("pSexe");
+const pTaille = $("pTaille");
+const pPoste = $("pPoste");
+const pStatut = $("pStatut");
+const pNiveau = $("pNiveau");
+const pPresent = $("pPresent");
+const pClub = $("pClub");
+
+const playerHeaderTitle = $("playerHeaderTitle");
+const playerHeaderSub = $("playerHeaderSub");
+
+const cntTotal = $("cntTotal");
+const cntPresent = $("cntPresent");
+const q = $("q");
+const filterStatus = $("filterStatus");
+const filterClub = $("filterClub");
+
+const profileSel = $("profile");
+const modeSel = $("mode");
+const quickFormat = $("quickFormat");
+const customSizes = $("customSizes");
+
+const surplusPolicy = $("surplusPolicy");
+const btnValidateRotation = $("btnValidateRotation");
+
+const cTall = $("cTall");
+const cSetter = $("cSetter");
+const cLibero = $("cLibero");
+const cLevels = $("cLevels");
+const cBeg1 = $("cBeg1");
+const cAttFort = $("cAttFort");
+const tallThreshold = $("tallThreshold");
+
+const btnGenerate = $("btnGenerate");
+const btnReroll = $("btnReroll");
+const teamsEl = $("teams");
+const gapTotal = $("gapTotal");
+const gapAvg = $("gapAvg");
+
+const btnExport = $("btnExport");
+const btnImport = $("btnImport");
+const btnImportCSVPlayers = $("btnImportCSVPlayers");
+const btnImportCSVNotes = $("btnImportCSVNotes");
+const btnReset = $("btnReset");
+const btnExportCSVPlayers = $("btnExportCSVPlayers");
+const btnExportCSVNotes = $("btnExportCSVNotes");
+const btnThemeToggle = $("btnThemeToggle");
+const btnTplPlayers = $("btnTplPlayers");
+const btnTplNotes = $("btnTplNotes");
+
+const btnSaveLocal = $("btnSaveLocal");
+const btnLoadLocal = $("btnLoadLocal");
+const btnGroups = $("btnGroups");
+
+const toast = $("toast");
+const seedLabel = $("seedLabel");
+const btnEditWeights = $("btnEditWeights");
+
+const fileInputJSON = $("fileInputJSON");
+const fileInputCSV = $("fileInputCSV");
+
+/** ---------------------------
+ *  UTILITIES
+ *  --------------------------- */
+function showToast(msg, type){
+  const div = document.createElement("div");
+  div.style.cssText = [
+    "position:fixed;bottom:16px;left:50%;transform:translateX(-50%);",
+    "z-index:9999;padding:10px 16px;border-radius:8px;color:#fff;",
+    "font-size:14px;max-width:90%;text-align:center;",
+    "box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:opacity 0.3s;",
+    "background:" + (type==="bad"||type==="error" ? "#e74c3c"
+      : type==="ok"||type==="success" ? "#27ae60"
+      : type==="warn" ? "#e67e22"
+      : "#34495e") + ";"
+  ].join("");
+  div.textContent = msg;
+  document.body.appendChild(div);
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>{
+    div.style.opacity="0";
+    setTimeout(()=>div.remove(), 300);
+  }, 2600);
+}
+
+
+// PWA-safe confirm() replacement
+function pwaConfirm(msg, onYes){
+  const el = document.getElementById("tbvConfirm");
+  document.getElementById("tbvConfirmMsg").textContent = msg;
+  el.style.display = "flex";
+  const yes = document.getElementById("tbvConfirmYes");
+  const no  = document.getElementById("tbvConfirmNo");
+  function cleanup(){ el.style.display = "none"; yes.onclick = null; no.onclick = null; }
+  yes.onclick = ()=>{ cleanup(); onYes(); };
+  no.onclick  = ()=>{ cleanup(); };
+}
+
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+function round2(n){ return Math.round(n*100)/100; }
+function seededShuffle(arr, seed){
+  const a = arr.slice();
+  let x = (seed * 9301 + 49297) % 233280;
+  const rnd = ()=> (x = (x*9301 + 49297) % 233280) / 233280;
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(rnd()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function ensurePlayerShape(p){
+  if(!p.notes) p.notes = {service:6,reception:6,passe:6,attaque:6,bloc:6,defense:6,relance:6,placement:6,mental:6,physique:6};
+
+  // clubs: support multi-club + rétro-compat (ancien champ p.club string)
+  if(!Array.isArray(p.clubs)){
+    const legacy = (typeof p.club === "string") ? p.club.trim() : "";
+    p.clubs = legacy ? [legacy] : [];
+  }
+  // normalise: trim + uniq + filtre vides
+  p.clubs = Array.from(new Set((p.clubs||[]).map(x=>String(x||"").trim()).filter(Boolean)));
+
+  for(const k of CRIT_KEYS) if(!Number.isFinite(Number(p.notes[k]))) p.notes[k]=6;
+  if(typeof p.present !== "boolean") p.present = false;
+  if(typeof p.selected !== "boolean") p.selected = false;
+  if(typeof p.comment !== "string") p.comment = "";
+  if(typeof p.played !== "number" || !Number.isFinite(p.played)) p.played = 0;
+  if(!p.levelManual) p.levelManual = "auto";
+  if(!Array.isArray(p.incompatibles)) p.incompatibles = [];
+  return p;
+}
+function normalizeName(s){
+  return String(s||"").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ");
+}
+
+/** ---------------------------
+ *  CLUB FILTER (multi-club)
+ *  --------------------------- */
+function getClubs(){
+  const set = new Set();
+  state.players.forEach(p=>{
+    const arr = Array.isArray(p.clubs) ? p.clubs : (p.club ? [p.club] : []);
+    arr.forEach(c=>{
+      const v = String(c||"").trim();
+      if(v) set.add(v);
+    });
+  });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b,'fr'));
+}
+
+function playerClubsLabel(p){
+  const arr = Array.isArray(p.clubs) ? p.clubs : (p.club ? [p.club] : []);
+  const clean = arr.map(x=>String(x||"").trim()).filter(Boolean);
+  return clean.length ? clean.join(", ") : "—";
+}
+function playerHasClub(p, clubName){
+  const target = normalizeName(clubName||"");
+  if(!target || target==="tous") return true;
+  const arr = Array.isArray(p.clubs) ? p.clubs : (p.club ? [p.club] : []);
+  return arr.some(c => normalizeName(c||"") === target);
+}
+
+function refreshClubFilterOptions(){
+  if(!filterClub) return;
+  const prev = filterClub.value || "Tous";
+  const clubs = getClubs();
+
+  // rebuild only if needed
+  const current = Array.from(filterClub.options).map(o=>o.value);
+  const next = ["Tous", ...clubs];
+  const same = current.length===next.length && current.every((v,i)=>v===next[i]);
+  if(!same){
+    filterClub.innerHTML = '<option value="Tous">Tous les clubs</option>' + clubs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  }
+
+  // keep selection if possible
+  if(next.includes(prev)) filterClub.value = prev;
+  else filterClub.value = "Tous";
+}
+
+/** ---------------------------
+ *  CSV utils (robuste)
+ *  - support ; ou , (détecté)
+ *  - support guillemets
+ *  --------------------------- */
+function detectDelimiter(headerLine){
+  const sc = (headerLine.match(/;/g)||[]).length;
+  const cc = (headerLine.match(/,/g)||[]).length;
+  if(sc===0 && cc===0) return ";";
+  return sc >= cc ? ";" : ",";
+}
+function parseCSV(text){
+  // Normalise les retours
+  const src = String(text||"").replace(/\r\n/g,"\n").replace(/\r/g,"\n").trim();
+  if(!src) return { rows:[], delim:";" };
+
+  const firstLine = src.split("\n")[0] || "";
+  const delim = detectDelimiter(firstLine);
+
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQ = false;
+
+  for(let i=0;i<src.length;i++){
+    const ch = src[i];
+
+    if(inQ){
+      if(ch === '"'){
+        const next = src[i+1];
+        if(next === '"'){ cur += '"'; i++; }
+        else inQ = false;
+      }else{
+        cur += ch;
+      }
+      continue;
+    }
+
+    if(ch === '"'){ inQ = true; continue; }
+    if(ch === delim){
+      row.push(cur);
+      cur = "";
+      continue;
+    }
+    if(ch === "\n"){
+      row.push(cur);
+      cur = "";
+      // ignore lignes vides
+      const nonEmpty = row.some(c => String(c||"").trim() !== "");
+      if(nonEmpty) rows.push(row);
+      row = [];
+      continue;
+    }
+    cur += ch;
+  }
+  row.push(cur);
+  if(row.some(c => String(c||"").trim() !== "")) rows.push(row);
+
+  return { rows, delim };
+}
+function toMapHeaders(headers){
+  // tolère accents / casse / espaces
+  const map = {};
+  headers.forEach((h, idx)=>{
+    const key = normalizeName(h).replace(/[^a-z0-9]+/g," ").trim();
+    map[key] = idx;
+  });
+  return map;
+}
+function cell(row, idx){
+  if(idx == null || idx < 0) return "";
+  return String(row[idx] ?? "").trim();
+}
+function asInt(s){
+  const n = Number(String(s).replace(",",".").trim());
+  return Number.isFinite(n) ? Math.round(n) : null;
+}
+function asNum(s){
+  const n = Number(String(s).replace(",",".").trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+/** ---------------------------
+ *  CSV download (Excel-friendly: BOM + ;)
+ *  --------------------------- */
+function todayISO(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function csvCell(v){
+  const s = String(v ?? "");
+  if(/[;\n\r"]/g.test(s)) return `"${s.replace(/"/g,'""')}"`;
+  return s;
+}
+function downloadCSV(filename, content){
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function buildPlayersTemplateCSV(){
+  const SEP = ";";
+  const headers = ["id","prenom","nom","sexe","taille_cm","poste","statut","clubs","present","played","niveau","comment"];
+  const rows = [
+    ["J001","Sarah","Dupont","Femme","178","Récep-Att","Actif","PUC","0","0","auto","Très bonne relance"],
+    ["J002","Eddy","Takougang","Homme","180","Pointu","Actif","Paris Beach Volley","1","2","Fort","Service puissant mais irrégulier"]
+  ];
+  let csv = headers.join(SEP) + "\n";
+  csv += rows.map(r => r.map(csvCell).join(SEP)).join("\n") + "\n";
+  return csv;
+}
+function buildNotesTemplateCSV(){
+  const SEP = ";";
+  const headers = ["id","service","reception","passe","attaque","bloc","defense","relance","placement","mental","physique","comment"];
+  const rows = [
+    ["J001","6","6","6","7","5","6","7","6","7","6","Peut attaquer plus souvent"],
+    ["J002","8","5","6","8","6","5","6","6","7","7","Très bon pointu"]
+  ];
+  let csv = headers.join(SEP) + "\n";
+  csv += rows.map(r => r.map(csvCell).join(SEP)).join("\n") + "\n";
+  return csv;
+}
+btnTplPlayers.addEventListener("click", ()=>{
+  downloadCSV(`Joueurs_Template_${todayISO()}.csv`, buildPlayersTemplateCSV());
+  showToast("Template Joueurs téléchargé.");
+});
+btnTplNotes.addEventListener("click", ()=>{
+  downloadCSV(`Notes_Template_${todayISO()}.csv`, buildNotesTemplateCSV());
+  showToast("Template Notes téléchargé.");
+});
+
+// Export CSV (données actuelles)
+function exportPlayersCSV(){
+  const SEP = ";";
+  const headers = ["id","prenom","nom","sexe","taille_cm","poste","statut","clubs","present","played","niveau","comment"];
+  const rows = state.players.map(p=>{
+    const lvl = String(p.levelManual||"auto");
+    return [
+      p.id,
+      p.prenom,
+      p.nom || "",
+      p.sexe,
+      String(p.taille),
+      p.poste,
+      p.statut,
+      (Array.isArray(p.clubs)?p.clubs.join("|"):(p.club||"")),
+      p.present ? "1" : "0",
+      String(Number(p.played||0)),
+      lvl,
+      p.comment || ""
+    ];
+  });
+  let csv = headers.join(SEP) + "\n";
+  csv += rows.map(r => r.map(csvCell).join(SEP)).join("\n") + "\n";
+  downloadCSV(`Joueurs_Export_${todayISO()}.csv`, csv);
+  showToast("CSV Joueurs exporté.");
+}
+function exportNotesCSV(){
+  const SEP = ";";
+  const headers = ["id","prenom","nom", ...CRIT_KEYS, "comment"];
+  const rows = state.players.map(p=>[
+    p.id, p.prenom, p.nom||"",
+    ...CRIT_KEYS.map(k=>String(Number(p.notes?.[k] ?? 6))),
+    p.comment || ""
+  ]);
+  let csv = headers.join(SEP) + "\n";
+  csv += rows.map(r => r.map(csvCell).join(SEP)).join("\n") + "\n";
+  downloadCSV(`Notes_Export_${todayISO()}.csv`, csv);
+  showToast("CSV Notes exporté.");
+}
+btnExportCSVPlayers?.addEventListener("click", exportPlayersCSV);
+btnExportCSVNotes?.addEventListener("click", exportNotesCSV);
+
+// Theme toggle (clair/sombre)
+const KEY_THEME = "tbv_theme_v4";
+function applyTheme(theme){
+  const t = (theme === "funky") ? "funky" : "dark";
+  if(t === "funky") document.documentElement.setAttribute("data-theme","funky");
+  else document.documentElement.removeAttribute("data-theme");
+  localStorage.setItem(KEY_THEME, t);
+}
+btnThemeToggle?.addEventListener("click", ()=>{
+  const current = localStorage.getItem(KEY_THEME) || "dark";
+  applyTheme(current === "funky" ? "dark" : "funky");
+  showToast((localStorage.getItem(KEY_THEME)==="funky") ? "Mode Funky ✨" : "Mode Dark 🌙");
+});
+
+/** ---------------------------
+ *  RENDER PLAYERS
+ *  --------------------------- */
+function renderPlayers(){
+  state.players.forEach(ensurePlayerShape);
+
+  const query = normalizeName(q.value || "");
+  const statusMode = filterStatus.value;
+  const clubMode = (filterClub?.value || "Tous");
+
+  refreshClubFilterOptions();
+
+  const list = state.players.filter(p=>{
+    if(statusMode !== "Tous" && p.statut !== "Actif") return false;
+    if(clubMode !== "Tous" && !playerHasClub(p, clubMode)) return false;
+    if(!query) return true;
+    const hay = normalizeName(`${p.prenom} ${p.nom} ${p.sexe} ${p.poste} ${p.statut} ${playerClubsLabel(p)} ${getPlayerLevel(p)}`);
+    return hay.includes(query);
+  });
+
+  cntTotal.textContent = String(state.players.length);
+  cntPresent.textContent = String(state.players.filter(p=>{
+    const okStatus = (filterStatus.value==="Tous" || p.statut==="Actif");
+    const okClub = ((filterClub?.value||"Tous")==="Tous" || playerHasClub(p, filterClub.value));
+return p.present && okStatus && okClub;
+  }).length);
+
+  playerList.innerHTML = "";
+  for(const p of list){
+    const sc = scorePlayer(p, profileSel.value);
+    const level = getPlayerLevel(p);
+    const levelPill = (level==="Fort") ? "ok" : (level==="Intermédiaire") ? "warn" : "bad";
+
+    const row = document.createElement("div");
+    row.className = "playerRow";
+    row.innerHTML = `
+      <input type="checkbox" ${p.selected ? "checked":""} data-sel />
+      <input type="checkbox" ${p.present ? "checked":""} data-pres />
+      <div>
+        <div class="name">${escapeHtml(p.prenom)} ${escapeHtml(p.nom || "")}</div>
+        <div class="meta">
+          ${escapeHtml(p.sexe)} • ${escapeHtml(p.poste)} • ${p.taille}cm •
+          <span class="muted">${escapeHtml(p.statut)}</span>
+          • <span class="muted">Clubs:</span> ${escapeHtml(playerClubsLabel(p))} • <span class="muted">Rotations jouées:</span> ${Number(p.played||0)}
+          • <span class="muted">Niveau:</span> ${escapeHtml(level)}
+        </div>
+      </div>
+      <div class="pill neutral">Score: ${sc.toFixed(2)}</div>
+      <div class="prActions row" style="justify-content:flex-end; gap:8px">
+        <span class="pill ${levelPill}" title="Niveau">${level}</span>
+        <button class="btn small" type="button" data-edit title="Éditer la fiche">✎</button>
+        <button class="btn small" type="button" data-rate>Noter</button>
+      </div>
+    `;
+
+    row.querySelector("[data-sel]").addEventListener("change", (e)=>{
+      p.selected = !!e.target.checked;
+      renderPlayers();
+    });
+
+    row.querySelector("[data-pres]").addEventListener("change", (e)=>{
+      p.present = !!e.target.checked;
+      renderPlayers();
+      if(state.lastTeams) generateTeams();
+    });
+
+    row.querySelector("[data-edit]").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openPlayerForm("edit", p);
+    });
+
+    row.querySelector("[data-rate]").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openRating(p);
+    });
+
+    playerList.appendChild(row);
+  }
+
+  selCount.textContent = String(state.players.filter(p=>p.selected).length);
+}
+
+/** ---------------------------
+ *  FORMAT PARSING
+ *  --------------------------- */
+function getTeamSizes(){
+  const qf = quickFormat.value;
+  if(qf !== "custom"){
+    const a = Number(String(qf).split("x")[0]);
+    if(Number.isFinite(a) && a>0) return [a,a];
+  }
+  const txt = (customSizes.value || "").trim();
+  if(!txt) return null;
+  const arr = txt.split(",").map(x=>Number(x.trim())).filter(n=>Number.isFinite(n) && n>0);
+  return arr.length ? arr : null;
+}
+quickFormat.addEventListener("change", ()=>{
+  customSizes.disabled = quickFormat.value !== "custom";
+});
+
+/** ---------------------------
+ *  TEAM GENERATION
+ *  --------------------------- */
+function snakeOrder(n){
+  const up = Array.from({length:n}, (_,i)=>i);
+  const down = Array.from({length:n}, (_,i)=>n-1-i);
+  return up.concat(down);
+}
+// showToast() gère tous les toasts (défini plus haut)
+
+function saveAll(){
+  try{ localStorage.setItem(KEY_LOCAL, JSON.stringify({ state, weights })); }catch(e){ console.warn('saveAll:', e); }
+}
+
+function generateTeams(){
+  try{
+    const teamSizes = getTeamSizes(); // array, e.g. [6,6] or custom
+    if(!Array.isArray(teamSizes) || teamSizes.length < 2){
+      showToast("Choisis un format d'équipes valide.", "warn");
+      return;
+    }
+    const numTeams = teamSizes.length;
+    const needed = teamSizes.reduce((a,b)=>a+Number(b||0),0);
+
+    // Base pool = présents + filtres UI (club / statut)
+    const poolAll = state.players.slice();
+
+    const statutFilter = (filterStatus?.value || "Tous");
+    const clubFilter = String(filterClub?.value || "").trim();
+
+    let base = poolAll.filter(p=>{
+      if(!p) return false;
+      if(p.present !== true) return false;
+      if(statutFilter !== "Tous" && String(p.statut||"").toLowerCase() !== String(statutFilter).toLowerCase()) return false;
+      if(clubFilter && clubFilter.toLowerCase() !== "tous" && !playerHasClub(p, clubFilter)) return false;
+      return true;
+    });
+
+    if(base.length < 2){
+      showToast("Pas assez de joueurs présents après filtres.", "warn");
+      renderTeams({teams:[], bench:[], teamSizes});
+      return;
+    }
+
+    // Surplus policy: reduce to 'needed' if too many players
+    let selected = base.slice();
+    let benchPlayers = [];
+    if(needed > 0 && selected.length > needed){
+      const policy = String(surplusPolicy?.value || "rotate");
+      if(policy === "top"){
+        selected.sort((a,b)=> scorePlayer(b, profileSel.value) - scorePlayer(a, profileSel.value));
+      }else if(policy === "random"){
+        selected.sort(()=> Math.random()-0.5);
+      }else if(policy === "first"){
+        // keep current order
+      }else{
+        // rotate (default): players who played last time go after
+        const last = new Set(state.lastSelectedIds || []);
+        selected.sort((a,b)=>{
+          const pa = last.has(a.id) ? 1 : 0;
+          const pb = last.has(b.id) ? 1 : 0;
+          if(pa !== pb) return pa - pb;
+          return scorePlayer(b, profileSel.value) - scorePlayer(a, profileSel.value);
+        });
+      }
+      benchPlayers = selected.slice(needed);
+      selected = selected.slice(0, needed);
+    }
+    state.lastSelectedIds = selected.map(p=>p.id);
+    saveAll();
+
+    // Constraints toggles
+    const cTall = !!(document.getElementById("cTall")?.checked);
+    const cSetter = !!(document.getElementById("cSetter")?.checked);
+    const cLibero = !!(document.getElementById("cLibero")?.checked);
+    const cMin1Beg = !!(document.getElementById("cBeg1")?.checked);
+    const cAttFort = !!(document.getElementById("cAttFort")?.checked);
+
+    const tallThreshold = Number(document.getElementById("tallThreshold")?.value || 185);
+
+    const isSetter = p => String(p.poste||"").toLowerCase() === "passeur";
+
+    const isLibero = p => String(p.poste||"").toLowerCase().includes("lib");
+    const isTall = p => Number(p.taille||0) >= tallThreshold;
+    const getLevel = p => getPlayerLevel(p); // "débutant" | "intermediaire" | "fort"
+    const scoreOf = p => scorePlayer(p, profileSel.value);
+
+    // Role counts => max per team
+    const setters = selected.filter(isSetter).length;
+    const liberos = selected.filter(isLibero).length;
+    const talls = selected.filter(isTall).length;
+
+    // maxSetter: Infinity because the "1 setter per team" rule is enforced by pre-assignment
+    // canAdd must NOT block remaining setters from filling empty spots
+    const maxSetter = Infinity;
+    const maxLibero = cLibero ? Math.ceil(liberos / numTeams) : Infinity;
+    const maxTall = cTall ? Math.ceil(talls / numTeams) : Infinity;
+
+    // Teams init
+    const teams = Array.from({length:numTeams}, (_,i)=>({
+      name: String.fromCharCode(65+i),
+      players: [],
+      total: 0,
+      avg: 0,
+      target: 0,
+      counts: {tall:0, setter:0, libero:0, skill:0, "Débutant":0, "Intermédiaire":0, "Fort":0}
+    }));
+
+    teams.forEach((t,i)=>{ t.target = Number(teamSizes[i]||0); });
+    const teamIndex = t => teams.indexOf(t);
+
+    const canAdd = (team, p)=>{
+      const idx = teamIndex(team);
+      if(idx < 0) return false;
+      if(team.players.length >= Number(teamSizes[idx]||0)) return false;
+      if(cSetter && isSetter(p) && team.counts.setter >= maxSetter) return false;
+      if(cLibero && isLibero(p) && team.counts.libero >= maxLibero) return false;
+      if(cTall && isTall(p) && team.counts.tall >= maxTall) return false;
+      // Contrainte dure incompatibilité
+      const incompat = Array.isArray(p.incompatibles) ? p.incompatibles : [];
+      if(incompat.length && team.players.some(o => incompat.includes(o.p.id))) return false;
+      // Réciprocité : vérifier si un joueur déjà dans l'équipe a p dans ses incompatibles
+      if(team.players.some(o => Array.isArray(o.p.incompatibles) && o.p.incompatibles.includes(p.id))) return false;
+      return true;
+    };
+
+    const addToTeam = (team, p)=>{
+      const sc = scoreOf(p);
+      const level = getLevel(p);
+      team.players.push({p, sc, level});
+      team.total += sc;
+
+      if(isTall(p)) team.counts.tall++;
+      if(isSetter(p)) team.counts.setter++;
+      if(isLibero(p)) team.counts.libero++;
+
+      const lnorm = level.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+      if(lnorm === "debutant") team.counts["Débutant"]++;
+      else if(lnorm === "intermediaire") team.counts["Intermédiaire"]++;
+      else if(lnorm === "fort") team.counts["Fort"]++;
+    };
+
+    // ================================================================
+    // PRÉ-ASSIGNATION ORCHESTRÉE
+    // Principe : pour chaque équipe éligible, on assigne dans l'ordre :
+    //   1. 1 joueur faible (deb ou inter bas) — équipes éligibles seulement
+    //   2. 1 passeur (Fort si équipe avec deb, Inter sinon)
+    //   3. 1 attaquant fort (Fort si équipe avec deb, Inter sinon)
+    // On travaille avec un Set d'IDs déjà assignés pour éviter tout doublon.
+    // ================================================================
+    {
+      const maxTSz = Math.max(...teamSizes.map(Number));
+      const eligible = teams.filter((_,i) => Number(teamSizes[i]||0) === maxTSz);
+      const pool = eligible.length > 0 ? eligible : teams;
+
+      const assigned = new Set(); // IDs déjà pré-assignés
+
+      const lvl = p => getLevel(p).toLowerCase().replace("é","e");
+      const isFort  = p => lvl(p) === "fort";
+      const isInter = p => lvl(p) === "intermediaire";
+      const isDeb   = p => lvl(p) === "debutant" || getLevel(p).toLowerCase() === "débutant";
+
+      // Prend le premier joueur disponible d'une liste (non encore assigné)
+      const pick = (list) => list.find(p => !assigned.has(p.id)) || null;
+
+      // Assigne un joueur à une équipe cible (ou la première qui peut l'accueillir)
+      const doAssign = (p, preferredTeam) => {
+        if(!p || assigned.has(p.id)) return;
+        assigned.add(p.id);
+        selected = selected.filter(x => x.id !== p.id);
+        if(preferredTeam && canAdd(preferredTeam, p)){
+          addToTeam(preferredTeam, p);
+        } else {
+          const alt = pool.find(t => canAdd(t, p));
+          if(alt) addToTeam(alt, p); else benchPlayers.push(p);
+        }
+      };
+
+      // ─── Listes source (dans selected complet, filtrées par rôle/niveau) ──
+      const debs   = selected.filter(isDeb).sort((a,b) => scoreOf(a)-scoreOf(b));
+      const inters = selected.filter(p => isInter(p) && !isSetter(p)).sort((a,b) => scoreOf(a)-scoreOf(b));
+
+      const setFort  = selected.filter(p => isSetter(p) && isFort(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+      const setInter = selected.filter(p => isSetter(p) && isInter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+      const setOther = selected.filter(p => isSetter(p) && !isFort(p) && !isInter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+
+      const attFort  = selected.filter(p => isFort(p)  && !isSetter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+      const attInter = selected.filter(p => isInter(p) && !isSetter(p)).sort((a,b) => scoreOf(b)-scoreOf(a));
+
+      // ─── ÉTAPE 1 : joueurs faibles (1 par équipe éligible) ────────────────
+      // Constitue la liste des joueurs faibles à distribuer
+      const weakList = [];
+      if(cMin1Beg){
+        debs.forEach(p => weakList.push(p));
+        if(weakList.length < pool.length){
+          inters.forEach(p => { if(weakList.length < pool.length) weakList.push(p); });
+        }
+      }
+
+      // Assigne 1 joueur faible par équipe éligible
+      pool.forEach((team, i) => {
+        if(cMin1Beg && weakList[i]) doAssign(weakList[i], team);
+      });
+
+      // Marque les équipes qui ont reçu un deb (→ "équipe faible" → reçoit Fort)
+      const teamHasDeb = t => t.players.some(o => isDeb(o.p));
+
+      // ─── ÉTAPE 2 : passeurs (1 par équipe éligible) ───────────────────────
+      if(cSetter){
+        pool.forEach(team => {
+          let p;
+          if(teamHasDeb(team)){
+            // Équipe avec deb → passeur Fort en priorité
+            p = pick(setFort) || pick(setOther) || pick(setInter);
+          } else {
+            // Équipe sans deb → passeur Inter en priorité
+            p = pick(setInter) || pick(setOther) || pick(setFort);
+          }
+          doAssign(p, team);
+        });
+
+        const totalSetters = setFort.length + setInter.length + setOther.length;
+        if(totalSetters < pool.length){
+          showToast(`⚠️ Seulement ${totalSetters} passeur(s) pour ${pool.length} équipes.`, "warn");
+        }
+      }
+
+      // ─── ÉTAPE 3 : attaquants (1 par équipe éligible) ────────────────────
+      if(cAttFort){
+        pool.forEach(team => {
+          let p;
+          if(teamHasDeb(team)){
+            // Équipe avec deb → attaquant Fort en priorité
+            p = pick(attFort) || pick(attInter);
+          } else {
+            // Équipe sans deb → attaquant Inter en priorité
+            p = pick(attInter) || pick(attFort);
+          }
+          doAssign(p, team);
+        });
+
+        if((attFort.length + attInter.length) < pool.length){
+          showToast(`⚠️ Pas assez d'attaquants fort/inter pour ${pool.length} équipes.`, "warn");
+        }
+      }
+
+      // Toast récap fallback
+      if(cMin1Beg){
+        const nbDeb = weakList.filter(isDeb).length;
+        const nbInter = weakList.filter(isInter).length;
+        if(nbInter > 0){
+          showToast(`⚠️ ${nbDeb} deb. + ${nbInter} inter. faible(s) répartis (1/équipe éligible).`, "warn");
+        }
+      }
+    }
+
+    // ── Remplissage restant : serpentin pondéré par total ──────────────
+    // Si "Équilibrer les niveaux" activé → serpentin strict (minimise l'écart de total)
+    // Sinon → greedy (équipe avec total le plus bas en premier, comme avant)
+    const cLevels = !!(document.getElementById("cLevels")?.checked);
+
+    selected.sort((a,b)=> scoreOf(b)-scoreOf(a)); // forts en premier
+
+    if(cLevels){
+      // Serpentin : 1→2→3→4→4→3→2→1→1→...
+      // On distribue par passes. Chaque passe = 1 joueur par équipe dans l'ordre croissant
+      // puis décroissant (zigzag), mais on choisit toujours l'équipe avec le total le plus bas
+      // parmi les éligibles pour ne pas violer canAdd.
+      let remaining = [...selected];
+      while(remaining.length){
+        // Trier les équipes par total croissant pour cette passe
+        const orderedTeams = [...teams]
+          .filter(t => remaining.some(p => canAdd(t, p)))
+          .sort((a,b) => a.total - b.total || a.players.length - b.players.length);
+
+        if(!orderedTeams.length) break;
+
+        // Construire l'ordre serpentin : A B C D D C B A
+        const snake = [...orderedTeams, ...[...orderedTeams].reverse()];
+        const used = new Set();
+
+        for(const team of snake){
+          if(used.has(team)) continue;
+          // Prend le joueur restant le plus fort qui peut aller dans cette équipe
+          const idx = remaining.findIndex(p => canAdd(team, p));
+          if(idx === -1) continue;
+          const p = remaining.splice(idx, 1)[0];
+          addToTeam(team, p);
+          used.add(team);
+          if(remaining.length === 0) break;
+        }
+
+        // Si aucun joueur assigné dans ce tour → tous au banc
+        if(used.size === 0){
+          remaining.forEach(p => benchPlayers.push(p));
+          break;
+        }
+      }
+    } else {
+      // Greedy : donne à l'équipe la moins forte qui peut accueillir
+      for(const p of selected){
+        const candidates = teams.filter(t=>canAdd(t,p));
+        if(!candidates.length){ benchPlayers.push(p); continue; }
+        candidates.sort((a,b)=> a.total - b.total || a.players.length - b.players.length);
+        addToTeam(candidates[0], p);
+      }
+    }
+
+    // final averages
+    teams.forEach((t)=>{
+      t.avg = t.players.length ? (t.total / t.players.length) : 0;
+    });
+
+    const bench = benchPlayers.map(p=>({p, sc: scoreOf(p), level: getLevel(p)}));
+
+    state.lastTeams = { teams, bench, teamSizes, selectedIds: selected.map(p=>p.id) };
+    state.manualDragDone = false;
+    saveAll();
+    pushHistory(state.lastTeams);
+    renderTeams(state.lastTeams);
+    showToast("Équipes générées ✅", "ok");
+  }catch(err){
+    console.error(err);
+    showToast("Erreur génération : " + (err?.message || err), "bad");
+  }
+}
+
+
+function recalcTeam(t){
+  t.total = t.players.reduce((s,o)=>s+o.sc,0);
+  t.avg   = t.players.length ? t.total/t.players.length : 0;
+  t.counts = {tall:0,setter:0,libero:0,skill:0,"Débutant":0,"Intermédiaire":0,"Fort":0};
+  const tallThreshold = Number(document.getElementById("tallThreshold")?.value||185);
+  t.players.forEach(o=>{
+    const p = o.p;
+    if(Number(p.taille||0)>=tallThreshold) t.counts.tall++;
+    if(String(p.poste||"").toLowerCase()==="passeur") t.counts.setter++;
+    if(String(p.poste||"").toLowerCase().includes("lib")) t.counts.libero++;
+    const lv = o.level.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(lv==="fort") t.counts["Fort"]++;
+    else if(lv==="intermediaire") t.counts["Intermédiaire"]++;
+    else if(lv==="debutant") t.counts["Débutant"]++;
+  });
+}
+
+function renderTeams(payload){
+  const teams = payload.teams;
+
+  // Recalc gaps
+  const updateGaps = ()=>{
+    const totals = teams.map(t=>t.total);
+    const avgs   = teams.map(t=>t.avg);
+    gapTotal.textContent = totals.length ? (Math.max(...totals)-Math.min(...totals)).toFixed(2) : "—";
+    gapAvg.textContent   = avgs.length   ? (Math.max(...avgs)  -Math.min(...avgs)  ).toFixed(2) : "—";
+  };
+  updateGaps();
+
+  teamsEl.innerHTML = "";
+
+  // Drag state
+  let dragPayload = null; // { teamIdx, playerObj }
+
+  const buildTeamCard = (t, tIdx) => {
+    const card = document.createElement("div");
+    card.className = "teamCard";
+    card.dataset.teamIdx = tIdx;
+
+    const renderHeader = () => `
+      <div class="teamHd">
+        <div class="k">${escapeHtml(t.name)} <span class="muted">(${t.players.length}/${t.target||"?"})</span></div>
+        <div class="mini">
+          <span class="pill ok">Total <b>${t.total.toFixed(2)}</b></span>
+          <span class="pill neutral">Moy <b>${t.avg.toFixed(2)}</b></span>
+        </div>
+      </div>`;
+
+    const renderStats = () => `
+      <div class="mini">
+        <span class="pill warn">Grands: <b>${t.counts.tall}</b></span>
+        <span class="pill neutral">Passeurs: <b>${t.counts.setter}</b></span>
+        <span class="pill neutral">Libéros: <b>${t.counts.libero}</b></span>
+        ${state.skillConstraint ? `<span class="pill neutral">Forts (critère): <b>${t.counts.skill}</b></span>` : ""}
+        <span class="pill ok">Niv Fort: <b>${t.counts.Fort}</b></span>
+        <span class="pill warn">Niv Inter: <b>${t.counts.Intermédiaire}</b></span>
+        <span class="pill bad">Niv Début: <b>${t.counts.Débutant}</b></span>
+      </div>`;
+
+    const refreshCard = () => {
+      recalcTeam(t);
+      updateGaps();
+      card.querySelector(".teamHd").outerHTML; // trigger
+      card.innerHTML = "";
+      card.insertAdjacentHTML("beforeend", renderHeader());
+      const body = document.createElement("div");
+      body.className = "teamBd";
+      body.insertAdjacentHTML("beforeend", renderStats());
+      body.insertAdjacentHTML("beforeend", '<div class="hr"></div>');
+      const list = document.createElement("div");
+      list.className = "list";
+      body.appendChild(list);
+      card.appendChild(body);
+      setupList(list, t, tIdx);
+      // re-attach drag events to card
+      setupCardDrop(card, t, tIdx, refreshCard);
+    };
+
+    card.insertAdjacentHTML("beforeend", renderHeader());
+    const body = document.createElement("div");
+    body.className = "teamBd";
+    body.insertAdjacentHTML("beforeend", renderStats());
+    body.insertAdjacentHTML("beforeend", '<div class="hr"></div>');
+    const list = document.createElement("div");
+    list.className = "list";
+    body.appendChild(list);
+    card.appendChild(body);
+
+    setupList(list, t, tIdx);
+    setupCardDrop(card, t, tIdx, refreshCard);
+    return card;
+  };
+
+  const setupList = (list, t, tIdx) => {
+    list.innerHTML = "";
+    t.players.slice().sort((a,b)=>b.sc-a.sc).forEach(o=>{
+      const p = o.p;
+      const el = document.createElement("div");
+      el.className = "playerChip";
+      el.draggable = true;
+      el.dataset.playerId = p.id;
+      el.innerHTML = `
+        <span class="drag-handle">⠿</span>
+        <div class="left" style="flex:1">
+          <div class="n">${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")}</div>
+          <div class="m">${escapeHtml(p.sexe)} • ${escapeHtml(p.poste)} • ${p.taille}cm • Niveau: ${escapeHtml(o.level)}</div>
+        </div>
+        <div class="score">${o.sc.toFixed(2)}</div>`;
+
+      el.addEventListener("dragstart", e=>{
+        dragPayload = { fromTeamIdx: tIdx, playerObj: o };
+        el.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", p.id);
+      });
+      el.addEventListener("dragend", ()=>{ el.classList.remove("dragging"); });
+
+      // ── Touch drag & drop (mobile) ──────────────────────────────────────
+      let ghost = null;
+      let touchActive = false;
+      let touchLongPressTimer = null;
+      const LONG_PRESS_MS = 200;
+
+      const createGhost = () => {
+        ghost = document.createElement("div");
+        ghost.className = "touch-ghost";
+        ghost.textContent = `${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")} · ${o.sc.toFixed(2)}`;
+        document.body.appendChild(ghost);
+      };
+      const moveGhost = (x, y) => {
+        if(!ghost) return;
+        ghost.style.left = (x - ghost.offsetWidth/2) + "px";
+        ghost.style.top  = (y - 28) + "px";
+      };
+      const removeGhost = () => { if(ghost){ ghost.remove(); ghost = null; } };
+
+      const getTargetCard = (x, y) => {
+        // Temporarily hide ghost so elementFromPoint works through it
+        if(ghost) ghost.style.display = "none";
+        const el2 = document.elementFromPoint(x, y);
+        if(ghost) ghost.style.display = "";
+        return el2?.closest(".teamCard") || null;
+      };
+
+      el.addEventListener("touchstart", e => {
+        // Long press to initiate drag
+        touchLongPressTimer = setTimeout(() => {
+          touchActive = true;
+          dragPayload = { fromTeamIdx: tIdx, playerObj: o };
+          el.classList.add("dragging");
+          const t0 = e.touches[0];
+          createGhost();
+          moveGhost(t0.clientX, t0.clientY);
+          // Haptic feedback if available
+          if(navigator.vibrate) navigator.vibrate(30);
+        }, LONG_PRESS_MS);
+      }, { passive: true });
+
+      el.addEventListener("touchmove", e => {
+        clearTimeout(touchLongPressTimer);
+        if(!touchActive) return;
+        e.preventDefault();
+        const t0 = e.touches[0];
+        moveGhost(t0.clientX, t0.clientY);
+        // Highlight target card
+        teamsEl.querySelectorAll(".teamCard").forEach(c => c.classList.remove("drag-over"));
+        const target = getTargetCard(t0.clientX, t0.clientY);
+        if(target && Number(target.dataset.teamIdx) !== tIdx) target.classList.add("drag-over");
+      }, { passive: false });
+
+      const onTouchEnd = e => {
+        clearTimeout(touchLongPressTimer);
+        if(!touchActive){ touchActive = false; return; }
+        touchActive = false;
+        el.classList.remove("dragging");
+        teamsEl.querySelectorAll(".teamCard").forEach(c => c.classList.remove("drag-over"));
+        removeGhost();
+
+        const t0 = e.changedTouches[0];
+        const targetCard = getTargetCard(t0.clientX, t0.clientY);
+        if(!targetCard) { dragPayload = null; return; }
+        const toIdx = Number(targetCard.dataset.teamIdx);
+        if(toIdx === tIdx || isNaN(toIdx)) { dragPayload = null; return; }
+
+        // Perform the move
+        const srcTeam = teams[tIdx];
+        const dstTeam = teams[toIdx];
+        srcTeam.players = srcTeam.players.filter(x => x.p.id !== p.id);
+        dstTeam.players.push(o);
+        recalcTeam(srcTeam);
+        recalcTeam(dstTeam);
+
+        dragPayload = null;
+
+        // Full re-render
+        teamsEl.innerHTML = "";
+        teams.forEach((team, i) => {
+          const c = buildTeamCard(team, i);
+          c.dataset.teamIdx = i;
+          teamsEl.appendChild(c);
+        });
+        updateGaps();
+        state.lastTeams = payload;
+        state.manualDragDone = true;
+        saveAll();
+      };
+
+      el.addEventListener("touchend",    onTouchEnd, { passive: true });
+      el.addEventListener("touchcancel", onTouchEnd, { passive: true });
+      // ────────────────────────────────────────────────────────────────────
+
+      list.appendChild(el);
+    });
+  };
+
+  const setupCardDrop = (card, t, tIdx, refreshCard) => {
+    card.addEventListener("dragover", e=>{
+      if(!dragPayload || dragPayload.fromTeamIdx === tIdx) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      card.classList.add("drag-over");
+    });
+    card.addEventListener("dragleave", e=>{
+      if(!card.contains(e.relatedTarget)) card.classList.remove("drag-over");
+    });
+    card.addEventListener("drop", e=>{
+      e.preventDefault();
+      card.classList.remove("drag-over");
+      if(!dragPayload || dragPayload.fromTeamIdx === tIdx) return;
+
+      const { fromTeamIdx, playerObj } = dragPayload;
+      dragPayload = null;
+
+      // Move player: remove from source team, add to target
+      const srcTeam = teams[fromTeamIdx];
+      srcTeam.players = srcTeam.players.filter(o=>o.p.id !== playerObj.p.id);
+      t.players.push(playerObj);
+
+      // Recalc both teams
+      recalcTeam(srcTeam);
+      recalcTeam(t);
+      updateGaps();
+
+      // Re-render both cards
+      const srcCard = teamsEl.querySelector(`[data-team-idx="${fromTeamIdx}"]`);
+      if(srcCard){
+        const srcList = srcCard.querySelector(".list");
+        const srcTd = teams[fromTeamIdx];
+        srcCard.querySelector(".teamHd").innerHTML = `
+          <div class="k">${escapeHtml(srcTd.name)} <span class="muted">(${srcTd.players.length}/${srcTd.target||"?"})</span></div>
+          <div class="mini">
+            <span class="pill ok">Total <b>${srcTd.total.toFixed(2)}</b></span>
+            <span class="pill neutral">Moy <b>${srcTd.avg.toFixed(2)}</b></span>
+          </div>`;
+        srcCard.querySelector(".mini").outerHTML;
+        // refresh stats
+        const srcStats = srcCard.querySelector(".teamBd .mini");
+        if(srcStats) srcStats.outerHTML = srcStats.outerHTML; // no-op, rebuild below
+        setupList(srcList, srcTd, fromTeamIdx);
+      }
+
+      // Refresh target card header + stats + list
+      card.querySelector(".teamHd").innerHTML = `
+        <div class="k">${escapeHtml(t.name)} <span class="muted">(${t.players.length}/${t.target||"?"})</span></div>
+        <div class="mini">
+          <span class="pill ok">Total <b>${t.total.toFixed(2)}</b></span>
+          <span class="pill neutral">Moy <b>${t.avg.toFixed(2)}</b></span>
+        </div>`;
+      setupList(card.querySelector(".list"), t, tIdx);
+
+      // Full re-render for stats row (simpler and reliable)
+      teamsEl.innerHTML = "";
+      teams.forEach((team, i)=>{
+        const c = buildTeamCard(team, i);
+        c.dataset.teamIdx = i;
+        teamsEl.appendChild(c);
+      });
+      updateGaps();
+      // Persist updated teams after drag & drop
+      state.lastTeams = payload;
+      state.manualDragDone = true;
+      saveAll();
+    });
+  };
+
+  teams.forEach((t, i)=>{
+    const card = buildTeamCard(t, i);
+    card.dataset.teamIdx = i;
+    teamsEl.appendChild(card);
+  });
+
+  seedLabel.textContent = String(SEED);
+  // Show swipe hint if teams exist
+  const swipeHint = document.getElementById("swipeHint");
+  if(swipeHint) swipeHint.style.display = (payload.teams && payload.teams.length > 0) ? "block" : "none";
+}
+
+/** ---------------------------
+ *  SELECTION BULK
+ *  --------------------------- */
+function getSelectedPlayers(){ return state.players.filter(p=>p.selected); }
+function clearSelection(){ state.players.forEach(p=>p.selected=false); }
+
+btnSelAll.addEventListener("click", ()=>{
+  const query = normalizeName(q.value || "");
+  const statusMode = filterStatus.value;
+
+  state.players.forEach(p=>{
+    const visible =
+      (statusMode === "Tous" || p.statut === "Actif") &&
+      (!query || normalizeName(`${p.prenom} ${p.nom} ${p.sexe} ${p.poste} ${p.statut} ${getPlayerLevel(p)}`).includes(query));
+    if(visible) p.selected = true;
+  });
+  renderPlayers();
+});
+btnSelNone.addEventListener("click", ()=>{
+  clearSelection(); renderPlayers();
+});
+btnBulkPresent.addEventListener("click", ()=>{
+  const sel = getSelectedPlayers();
+  if(!sel.length) return showToast("Aucune sélection.");
+  sel.forEach(p=> p.present = true);
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+  showToast("Sélection → Présent ✅");
+});
+btnBulkAbsent.addEventListener("click", ()=>{
+  const sel = getSelectedPlayers();
+  if(!sel.length) return showToast("Aucune sélection.");
+  sel.forEach(p=> p.present = false);
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+  showToast("Sélection → Absent");
+});
+btnBulkActive.addEventListener("click", ()=>{
+  const sel = getSelectedPlayers();
+  if(!sel.length) return showToast("Aucune sélection.");
+  sel.forEach(p=> p.statut = "Actif");
+  renderPlayers();
+  showToast("Sélection → Statut Actif");
+});
+btnBulkInactive.addEventListener("click", ()=>{
+  const sel = getSelectedPlayers();
+  if(!sel.length) return showToast("Aucune sélection.");
+  sel.forEach(p=> { p.statut = "Inactif"; p.present = false; });
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+  showToast("Sélection → Statut Inactif");
+});
+btnBulkDelete.addEventListener("click", ()=>{
+  const sel = getSelectedPlayers();
+  if(!sel.length) return showToast("Aucune sélection.");
+  pwaConfirm(`Supprimer ${sel.length} joueur(s) ?`, ()=>{
+    const selSet = new Set(sel);
+    state.players = state.players.filter(p=>!selSet.has(p));
+    renderPlayers();
+    if(state.lastTeams) generateTeams();
+    showToast("Sélection supprimée.");
+  }); return;
+});
+
+/** ---------------------------
+ *  ROTATION VALIDATION
+ *  --------------------------- */
+btnValidateRotation.addEventListener("click", ()=>{
+  if(!state.lastTeams || !Array.isArray(state.lastTeams.selectedIds)){
+    showToast("Rien à valider (génère d'abord)."); return;
+  }
+  const ids = new Set(state.lastTeams.selectedIds);
+  let n = 0;
+  state.players.forEach(p=>{
+    if(ids.has(p.id)){
+      p.played = Number(p.played||0) + 1;
+      n++;
+    }
+  });
+  showToast(`Rotation validée ✅ (${n} joueurs comptabilisés).`);
+  renderPlayers();
+});
+
+/** ---------------------------
+ *  JSON IMPORT/EXPORT
+ *  --------------------------- */
+btnExport.addEventListener("click", ()=>{
+  const data = {
+    version: 4,
+    exportedAt: new Date().toISOString(),
+    players: state.players,
+    groups: state.groups || [],
+    weights,
+    skillConstraint: state.skillConstraint
+  };
+  // Inclure aussi la sauvegarde locale et l'historique
+  try{
+    const local = localStorage.getItem(KEY_LOCAL);
+    const history = localStorage.getItem(KEY_HISTORY);
+    if(local)   data._localBackup   = JSON.parse(local);
+    if(history) data._historyBackup = JSON.parse(history);
+  }catch(e){}
+
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `team_balancer_volley_export_${Date.now()}.json`;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  showToast("Export JSON prêt.");
+});
+
+// JSON overlay (mobile friendly)
+const importOverlay = $("importOverlay");
+const importBack = $("importBack");
+const importCancel = $("importCancel");
+const importPickFile = $("importPickFile");
+const importApply = $("importApply");
+const importTextarea = $("importTextarea");
+
+function openImportOverlay(){
+  importTextarea.value = "";
+  importOverlay.classList.remove("hidden");
+  importOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeImportOverlay(){
+  importOverlay.classList.add("hidden");
+  importOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+btnImport.addEventListener("click", ()=> openImportOverlay());
+importBack.addEventListener("click", closeImportOverlay);
+importCancel.addEventListener("click", closeImportOverlay);
+importOverlay.addEventListener("click", (e)=>{ if(e.target === importOverlay) closeImportOverlay(); });
+importPickFile.addEventListener("click", ()=> fileInputJSON.click());
+
+function applyImportedData(data){
+  if(!data || !Array.isArray(data.players)) throw new Error("invalid");
+  state.players = data.players.map(ensurePlayerShape);
+  state.groups = Array.isArray(data.groups) ? structuredClone(data.groups) : (state.groups || []);
+  if(data.weights && typeof data.weights === "object") weights = structuredClone(data.weights);
+  if(data.skillConstraint && typeof data.skillConstraint === "object") state.skillConstraint = structuredClone(data.skillConstraint);
+
+  // Restaurer la config locale et l'historique si présents
+  let restoredExtra = [];
+  if(data._localBackup){
+    try{
+      localStorage.setItem(KEY_LOCAL, JSON.stringify(data._localBackup));
+      // Restaurer lastTeams si présent
+      if(data._localBackup?.state?.lastTeams){
+        state.lastTeams = data._localBackup.state.lastTeams;
+        const playerMap = new Map(state.players.map(p=>[p.id, p]));
+        state.lastTeams.teams.forEach(t=>{
+          t.players = t.players.map(o=>({...o, p: playerMap.get(o.p?.id)||o.p})).filter(o=>o.p);
+        });
+      }
+      restoredExtra.push("config locale");
+    }catch(e){}
+  }
+  if(data._historyBackup){
+    try{
+      localStorage.setItem(KEY_HISTORY, JSON.stringify(data._historyBackup));
+      restoredExtra.push("historique");
+    }catch(e){}
+  }
+
+  const extra = restoredExtra.length ? ` + ${restoredExtra.join(" + ")}` : "";
+  showToast(`Import OK (joueurs + pondérations${extra}).`);
+  renderPlayers();
+  if(state.lastTeams) renderTeams(state.lastTeams);
+  else teamsEl.innerHTML = "";
+  closeImportOverlay();
+}
+importApply.addEventListener("click", ()=>{
+  const txt = (importTextarea.value || "").trim();
+  if(!txt){ showToast("Colle un JSON ou choisis un fichier."); return; }
+  try{ applyImportedData(JSON.parse(txt)); }
+  catch{ showToast("JSON collé invalide."); }
+});
+
+fileInputJSON.addEventListener("change", async ()=>{
+  const f = fileInputJSON.files?.[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    applyImportedData(JSON.parse(txt));
+  }catch{
+    showToast("Import impossible (JSON invalide).");
+  }finally{
+    fileInputJSON.value = "";
+  }
+});
+
+/** ---------------------------
+ *  CSV IMPORT OVERLAY
+ *  --------------------------- */
+const csvOverlay = $("csvOverlay");
+const csvBack = $("csvBack");
+const csvCancel = $("csvCancel");
+const csvPickFile = $("csvPickFile");
+const csvDoImport = $("csvDoImport");
+const csvTextarea = $("csvTextarea");
+const csvPreview = $("csvPreview");
+const csvRules = $("csvRules");
+const csvHeaderTitle = $("csvHeaderTitle");
+const csvHeaderSub = $("csvHeaderSub");
+const csvMode = $("csvMode");
+const csvMatch = $("csvMatch");
+
+let _csvContext = { kind:null, fileText:"" };
+
+function openCsvOverlay(kind){
+  _csvContext = { kind, fileText:"" };
+  csvTextarea.value = "";
+  csvPreview.textContent = "Aucun fichier chargé.";
+  csvMode.value = "merge";
+  csvMatch.value = "id";
+
+  if(kind === "players"){
+    csvHeaderTitle.textContent = "Importer CSV Joueurs";
+    csvHeaderSub.textContent = "Colonnes attendues: id / Prénom / Nom / Sexe / Taille / Poste / Statut (+ present, played, niveau, comment)";
+    csvRules.innerHTML = `
+      <b>Joueurs</b> : entêtes acceptées (FR ou technique). Exemples:<br/>
+      <span class="muted">Prénom, Nom, Sexe, Taille, Poste, Statut</span><br/>
+      ou <span class="muted">id, prenom, nom, sexe, taille_cm, poste, statut</span><br/>
+      <div class="hr"></div>
+      <b>Mode fusion</b> : ajoute / met à jour selon ID (ou Prénom+Nom).<br/>
+      <b>Mode remplacement</b> : remplace toute la liste des joueurs (dangereux).
+    `;
+  }else{
+    csvHeaderTitle.textContent = "Importer CSV Notes";
+    csvHeaderSub.textContent = "Colonnes attendues: id (ou prénom+nom) + 10 critères (service, réception, etc.)";
+    csvRules.innerHTML = `
+      <b>Notes</b> : tu peux fournir <span class="muted">id</span> ou <span class="muted">Prénom+Nom</span>, puis les 10 critères.<br/>
+      Critères acceptés : Service, Réception, Passe, Attaque, Bloc, Défense, Relance, Placement, Mental, Physique.<br/>
+      (Accents, casse, espaces : tolérés.)
+    `;
+  }
+
+  csvOverlay.classList.remove("hidden");
+  csvOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeCsvOverlay(){
+  csvOverlay.classList.add("hidden");
+  csvOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  _csvContext = { kind:null, fileText:"" };
+}
+btnImportCSVPlayers.addEventListener("click", ()=> openCsvOverlay("players"));
+btnImportCSVNotes.addEventListener("click", ()=> openCsvOverlay("notes"));
+
+csvBack.addEventListener("click", closeCsvOverlay);
+csvCancel.addEventListener("click", closeCsvOverlay);
+csvOverlay.addEventListener("click", (e)=>{ if(e.target === csvOverlay) closeCsvOverlay(); });
+csvPickFile.addEventListener("click", ()=> fileInputCSV.click());
+
+fileInputCSV.addEventListener("change", async ()=>{
+  const f = fileInputCSV.files?.[0];
+  if(!f) return;
+  try{
+    const txt = await f.text();
+    _csvContext.fileText = txt;
+    csvPreview.textContent = `Fichier chargé: ${f.name} (${txt.split(/\n/).length} lignes)`;
+  }catch{
+    showToast("Lecture CSV impossible.");
+  }finally{
+    fileInputCSV.value = "";
+  }
+});
+
+function matchPlayerBy(rowObj, mode){
+  if(mode === "id" && rowObj.id){
+    const id = String(rowObj.id).trim();
+    return state.players.find(p => String(p.id||"").trim() === id) || null;
+  }
+  // name
+  const key = normalizeName(`${rowObj.prenom||""} ${rowObj.nom||""}`);
+  if(!key.trim()) return null;
+  return state.players.find(p => normalizeName(`${p.prenom} ${p.nom}`) === key) || null;
+}
+
+function parsePlayersCSV(text){
+  const { rows } = parseCSV(text);
+  if(rows.length < 2) return { ok:false, err:"CSV vide ou sans données." };
+
+  const headers = rows[0].map(h=>String(h||"").trim());
+  const hmap = toMapHeaders(headers);
+
+  // map possible aliases
+  const idx = (aliases)=> {
+    for(const a of aliases){
+      const k = normalizeName(a).replace(/[^a-z0-9]+/g," ").trim();
+      if(hmap[k] != null) return hmap[k];
+    }
+    return null;
+  };
+
+  const iId = idx(["id","identifiant"]);
+  const iPrenom = idx(["prenom","prénom","first name"]);
+  const iNom = idx(["nom","last name","surname"]);
+  const iSexe = idx(["sexe","genre"]);
+  const iTaille = idx(["taille","taille cm","taille_cm","height","height cm"]);
+  const iPoste = idx(["poste","position","role"]);
+  const iStatut = idx(["statut","status"]); 
+  const iClubs = idx(["clubs","club(s)","club","association","team"]);
+  const iPresent = idx(["present","présent"]);
+  const iPlayed = idx(["played","rotations","rotations jouees","rotations jouées","temps de jeu"]);
+  const iNiveau = idx(["niveau","level"]);
+  const iComment = idx(["comment","commentaire","notes coach"]);
+
+  if(iPrenom == null){
+    return { ok:false, err:"Colonne 'Prénom' (ou prenom) manquante." };
+  }
+
+  const data = [];
+  for(let r=1; r<rows.length; r++){
+    const row = rows[r];
+    const obj = {
+      id: iId!=null ? cell(row,iId) : "",
+      prenom: cell(row,iPrenom),
+      nom: iNom!=null ? cell(row,iNom) : "",
+      sexe: iSexe!=null ? cell(row,iSexe) : "Autre",
+      taille_cm: iTaille!=null ? cell(row,iTaille) : "",
+      poste: iPoste!=null ? cell(row,iPoste) : "non défini",
+      statut: iStatut!=null ? cell(row,iStatut) : "Actif",
+      clubs: iClubs!=null ? cell(row,iClubs) : "",
+      present: iPresent!=null ? cell(row,iPresent) : "",
+      played: iPlayed!=null ? cell(row,iPlayed) : "",
+      niveau: iNiveau!=null ? cell(row,iNiveau) : "",
+      comment: iComment!=null ? cell(row,iComment) : ""
+    };
+
+    if(!obj.prenom.trim()) continue;
+    data.push(obj);
+  }
+  if(!data.length) return { ok:false, err:"Aucune ligne valide trouvée." };
+  return { ok:true, data };
+}
+
+function importPlayersFromCSV(text){
+  const parsed = parsePlayersCSV(text);
+  if(!parsed.ok){ showToast(parsed.err); return false; }
+
+  const mode = csvMode.value;
+  const matchMode = csvMatch.value;
+
+  let newPlayers = (mode==="replace") ? [] : state.players.slice();
+  const byIdExisting = new Map(newPlayers.map(p=>[String(p.id||""), p]));
+
+  let created=0, updated=0, skipped=0, bad=0;
+
+  for(const r of parsed.data){
+    const taille = asInt(r.taille_cm);
+    if(taille==null || taille < 120 || taille > 230){ bad++; continue; }
+
+    const sexe = r.sexe?.trim() || "Autre";
+    const poste = r.poste?.trim() || "non défini";
+    const statut = r.statut?.trim() || "Actif";
+
+    const presentRaw = String(r.present||"").trim();
+    const present = (presentRaw==="1" || presentRaw.toLowerCase()==="true" || presentRaw.toLowerCase()==="oui");
+
+    const played = asInt(r.played);
+    const level = String(r.niveau||"").trim();
+    const levelManual = (level==="Fort"||level==="Intermédiaire"||level==="Débutant") ? level : (level==="auto"||level==="Auto"||!level) ? "auto" : "auto";
+
+    const id = (r.id && r.id.trim()) ? r.id.trim() : null;
+
+    // find existing
+    let existing = null;
+    if(matchMode === "id" && id){
+      existing = byIdExisting.get(id) || null;
+    }else{
+      const key = normalizeName(`${r.prenom} ${r.nom}`);
+      existing = newPlayers.find(p => normalizeName(`${p.prenom} ${p.nom}`) === key) || null;
+    }
+
+    if(existing){
+      existing.prenom = r.prenom.trim();
+      existing.nom = (r.nom||"").trim();
+      existing.sexe = sexe;
+      existing.taille = taille;
+      existing.poste = poste;
+      existing.statut = statut;
+      if(r.clubs!=null || r.club!=null){
+        const raw = String((r.clubs!=null? r.clubs : r.club) || "").trim();
+        const arr = raw ? raw.split(/[|,]/).map(s=>s.trim()).filter(Boolean) : [];
+        existing.clubs = Array.from(new Set(arr));
+        existing.club = existing.clubs[0] || "";
+      }
+      if(presentRaw) existing.present = present;
+      if(played!=null) existing.played = played;
+      if(r.comment) existing.comment = String(r.comment);
+      existing.levelManual = levelManual;
+      ensurePlayerShape(existing);
+      updated++;
+    }else{
+      const newId = id || nextPlayerId(newPlayers);
+      if(byIdExisting.has(newId)){
+        // collision id (rare) -> skip
+        skipped++; continue;
+      }
+      const p = mkPlayer(newId, r.prenom.trim(), (r.nom||"").trim(), sexe, taille, poste, statut);
+      const rawClubs = String((r.clubs!=null? r.clubs : r.club) || "").trim();
+      const clubsArr = rawClubs ? rawClubs.split(/[|,]/).map(s=>s.trim()).filter(Boolean) : [];
+      p.clubs = Array.from(new Set(clubsArr));
+      p.club = p.clubs[0] || "";
+      p.present = presentRaw ? present : false;
+      p.played = (played!=null) ? played : 0;
+      p.comment = String(r.comment||"");
+      p.levelManual = levelManual;
+      ensurePlayerShape(p);
+      newPlayers.push(p);
+      byIdExisting.set(newId, p);
+      created++;
+    }
+  }
+
+  state.players = newPlayers;
+  renderPlayers();
+  teamsEl.innerHTML = "";
+  showToast(`CSV Joueurs importé: +${created} / maj ${updated} / rejet ${bad}${skipped?(" / ignorés "+skipped):""}`);
+  return true;
+}
+
+function parseNotesCSV(text){
+  const { rows } = parseCSV(text);
+  if(rows.length < 2) return { ok:false, err:"CSV vide ou sans données." };
+
+  const headers = rows[0].map(h=>String(h||"").trim());
+  const hmap = toMapHeaders(headers);
+
+  const idx = (aliases)=> {
+    for(const a of aliases){
+      const k = normalizeName(a).replace(/[^a-z0-9]+/g," ").trim();
+      if(hmap[k] != null) return hmap[k];
+    }
+    return null;
+  };
+
+  const iId = idx(["id","identifiant"]);
+  const iPrenom = idx(["prenom","prénom"]);
+  const iNom = idx(["nom"]);
+
+  // criteria indexes
+  const critIdx = {};
+  for(const k of CRIT_KEYS){
+    // accept FR label variants
+    const aliases = [
+      k,
+      CRIT_LABELS[k],
+      CRIT_LABELS[k].toLowerCase()
+    ];
+    critIdx[k] = idx(aliases);
+  }
+
+  if(iId==null && iPrenom==null){
+    return { ok:false, err:"Il faut 'id' ou 'Prénom' pour matcher les joueurs." };
+  }
+
+  const data = [];
+  for(let r=1; r<rows.length; r++){
+    const row = rows[r];
+    const obj = {
+      id: iId!=null ? cell(row,iId) : "",
+      prenom: iPrenom!=null ? cell(row,iPrenom) : "",
+      nom: iNom!=null ? cell(row,iNom) : "",
+      notes: {}
+    };
+    let hasAny=false;
+    for(const k of CRIT_KEYS){
+      const ii = critIdx[k];
+      if(ii==null) continue;
+      const v = asNum(cell(row,ii));
+      if(v!=null){ obj.notes[k]=v; hasAny=true; }
+    }
+    if(!hasAny) continue;
+    data.push(obj);
+  }
+  if(!data.length) return { ok:false, err:"Aucune ligne de notes valide trouvée." };
+  return { ok:true, data };
+}
+
+function importNotesFromCSV(text){
+  const parsed = parseNotesCSV(text);
+  if(!parsed.ok){ showToast(parsed.err); return false; }
+
+  const matchMode = csvMatch.value;
+
+  let updated=0, missing=0, bad=0;
+
+  for(const r of parsed.data){
+    let p = null;
+    if(matchMode === "id" && r.id){
+      p = state.players.find(x => String(x.id||"").trim() === String(r.id).trim()) || null;
+    }else{
+      const key = normalizeName(`${r.prenom} ${r.nom}`);
+      if(!key.trim()){ missing++; continue; }
+      p = state.players.find(x => normalizeName(`${x.prenom} ${x.nom}`) === key) || null;
+    }
+    if(!p){ missing++; continue; }
+
+    // validate & clamp
+    for(const k of CRIT_KEYS){
+      if(r.notes[k]==null) continue;
+      const v = Number(r.notes[k]);
+      if(!Number.isFinite(v)){ bad++; continue; }
+      p.notes[k] = Math.max(1, Math.min(10, Math.round(v))); // entier 1..10
+    }
+    ensurePlayerShape(p);
+    updated++;
+  }
+
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+  showToast(`CSV Notes importé: maj ${updated} / introuvables ${missing} / valeurs rejetées ${bad}`);
+  return true;
+}
+
+csvDoImport.addEventListener("click", ()=>{
+  const pasted = (csvTextarea.value||"").trim();
+  const txt = pasted || _csvContext.fileText;
+  if(!txt){ showToast("Colle un CSV ou choisis un fichier."); return; }
+
+  if(_csvContext.kind === "players"){
+    if(csvMode.value==="replace"){
+      pwaConfirm("Remplacement complet: tu vas supprimer la liste actuelle. Continuer ?", ()=>{
+        const ok2 = importPlayersFromCSV(txt);
+        if(ok2) closeCsvOverlay();
+      }); return;
+    }
+    const ok = importPlayersFromCSV(txt);
+    if(ok) closeCsvOverlay();
+  }else if(_csvContext.kind === "notes"){
+    const ok = importNotesFromCSV(txt);
+    if(ok) closeCsvOverlay();
+  }else{
+    showToast("Contexte CSV inconnu.");
+  }
+});
+
+
+/** ---------------------------
+ *  GROUPES (multi-club) — sauvegarde locale
+ *  --------------------------- */
+const groupsOverlay = $("groupsOverlay");
+const groupsBack = $("groupsBack");
+const groupsCancel = $("groupsCancel");
+const groupsSave = $("groupsSave");
+const gName = $("gName");
+const gClub = $("gClub");
+const gFilterClub = $("gFilterClub");
+const gSelAll = $("gSelAll");
+const gSelNone = $("gSelNone");
+const gPlayersList = $("gPlayersList");
+const gSavedList = $("gSavedList");
+
+function ensureGroupsShape(){
+  if(!Array.isArray(state.groups)) state.groups = [];
+  state.groups = state.groups.map(g=>({
+    id: String(g.id || ""),
+    name: String(g.name || "Groupe"),
+    club: String(g.club || ""),
+    playerIds: Array.isArray(g.playerIds) ? g.playerIds.map(String) : [],
+    createdAt: String(g.createdAt || "")
+  })).filter(g=>g.id && g.playerIds.length);
+}
+
+function uid(prefix="G"){
+  return prefix + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+function openGroups(){
+  ensureGroupsShape();
+  // pré-remplis club selon filtre courant
+  const fc = (filterClub?.value || "Tous");
+  if(fc && fc !== "Tous"){
+    gFilterClub.value = fc;
+    if(!gClub.value) gClub.value = fc;
+  }
+  renderGroupsUI();
+  groupsOverlay.classList.remove("hidden");
+  groupsOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeGroups(){
+  groupsOverlay.classList.add("hidden");
+  groupsOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+
+function renderGroupsUI(){
+  ensureGroupsShape();
+
+  // options club filter
+  const clubs = getClubs();
+  const prev = gFilterClub.value || "Tous";
+  gFilterClub.innerHTML = '<option value="Tous">Tous les clubs</option>' + clubs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  gFilterClub.value = (["Tous", ...clubs].includes(prev)) ? prev : "Tous";
+
+  // players list with checkboxes
+  const clubMode = gFilterClub.value || "Tous";
+  const players = state.players
+    .slice()
+    .sort((a,b)=> normalizeName(`${playerClubsLabel(a)} ${a.prenom} ${a.nom}`).localeCompare(normalizeName(`${playerClubsLabel(b)} ${b.prenom} ${b.nom}`),'fr'));
+
+  gPlayersList.innerHTML = "";
+  const defaultSet = new Set(state.players.filter(p=>p.selected || p.present).map(p=>p.id)); // pré-cocher sélection/presents
+  players.forEach(p=>{
+    if(clubMode !== "Tous" && !playerHasClub(p, clubMode)) return;
+
+    const row = document.createElement("div");
+    row.className = "playerRow";
+    row.style.gridTemplateColumns = "26px 1fr auto";
+    row.innerHTML = `
+      <input type="checkbox" data-gsel ${defaultSet.has(p.id) ? "checked":""}/>
+      <div>
+        <div class="name">${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")}</div>
+        <div class="meta">${escapeHtml(playerClubsLabel(p))} • ${escapeHtml(p.poste)} • ${escapeHtml(p.statut)}</div>
+      </div>
+      <span class="pill neutral">${escapeHtml(getPlayerLevel(p))}</span>
+    `;
+    gPlayersList.appendChild(row);
+  });
+
+  // saved groups list
+  gSavedList.innerHTML = "";
+  if(!state.groups.length){
+    gSavedList.innerHTML = '<div class="hint">Aucun groupe sauvegardé pour le moment.</div>';
+    return;
+  }
+
+  state.groups
+    .slice()
+    .sort((a,b)=> (a.club||"").localeCompare(b.club||"",'fr') || a.name.localeCompare(b.name,'fr'))
+    .forEach(g=>{
+      const row = document.createElement("div");
+      row.className = "playerChip";
+      row.innerHTML = `
+        <div class="left">
+          <div class="n">${escapeHtml(g.name)}</div>
+          <div class="m">${escapeHtml(g.club||"—")} • ${g.playerIds.length} joueur(s)</div>
+        </div>
+        <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end">
+          <button class="btn small ok" type="button" data-apply>Rappeler</button>
+          <button class="btn small" type="button" data-select>Sélectionner</button>
+          <button class="btn small danger" type="button" data-del>Supprimer</button>
+        </div>
+      `;
+      row.querySelector("[data-apply]").addEventListener("click", ()=>{
+        const ids = new Set(g.playerIds);
+        state.players.forEach(p=>{
+          // ne force pas les inactifs à "présent"
+          if(p.statut !== "Actif"){ p.present = false; return; }
+          p.present = ids.has(p.id);
+        });
+        clearSelection();
+        renderPlayers();
+        if(state.lastTeams) generateTeams();
+        showToast(`Groupe rappelé: ${g.name}`);
+        closeGroups();
+      });
+      row.querySelector("[data-select]").addEventListener("click", ()=>{
+        const ids = new Set(g.playerIds);
+        state.players.forEach(p=> p.selected = ids.has(p.id));
+        renderPlayers();
+        showToast(`Sélection: ${g.name}`);
+        closeGroups();
+      });
+      row.querySelector("[data-del]").addEventListener("click", ()=>{
+        pwaConfirm(`Supprimer le groupe "${g.name}" ?`, ()=>{
+          state.groups = state.groups.filter(x=>x.id !== g.id);
+          showToast("Groupe supprimé.");
+          renderGroupsUI();
+        }); return;
+      });
+
+      gSavedList.appendChild(row);
+    });
+}
+
+function readGroupSelectionIds(){
+  const ids = [];
+  gPlayersList.querySelectorAll("input[data-gsel]").forEach((cb, idx)=>{
+    // find player id by traversing: get corresponding visible players list again
+  });
+  // Instead of relying on index, we attach data-id on row.
+  return ids;
+}
+
+// Rewire players list rendering to include data-id + selection reader
+function renderGroupsPlayersList(){
+  const clubMode = gFilterClub.value || "Tous";
+  const players = state.players
+    .slice()
+    .sort((a,b)=> normalizeName(`${playerClubsLabel(a)} ${a.prenom} ${a.nom}`).localeCompare(normalizeName(`${playerClubsLabel(b)} ${b.prenom} ${b.nom}`),'fr'));
+  gPlayersList.innerHTML = "";
+  const defaultSet = new Set(state.players.filter(p=>p.selected || p.present).map(p=>p.id));
+  players.forEach(p=>{
+    if(clubMode !== "Tous" && !playerHasClub(p, clubMode)) return;
+    const row = document.createElement("div");
+    row.className = "playerRow";
+    row.style.gridTemplateColumns = "26px 1fr auto";
+    row.dataset.pid = p.id;
+    row.innerHTML = `
+      <input type="checkbox" data-gsel ${defaultSet.has(p.id) ? "checked":""}/>
+      <div>
+        <div class="name">${escapeHtml(p.prenom)} ${escapeHtml(p.nom||"")}</div>
+        <div class="meta">${escapeHtml(playerClubsLabel(p))} • ${escapeHtml(p.poste)} • ${escapeHtml(p.statut)}</div>
+      </div>
+      <span class="pill neutral">${escapeHtml(getPlayerLevel(p))}</span>
+    `;
+    gPlayersList.appendChild(row);
+  });
+}
+
+function collectCheckedIds(){
+  const ids = [];
+  gPlayersList.querySelectorAll(".playerRow").forEach(row=>{
+    const cb = row.querySelector("input[data-gsel]");
+    if(cb && cb.checked) ids.push(String(row.dataset.pid || ""));
+  });
+  return ids.filter(Boolean);
+}
+
+function saveGroupNow(){
+  const name = (gName.value||"").trim();
+  const club = (gClub.value||"").trim();
+  if(!name){ showToast("Nom du groupe obligatoire."); gName.focus(); return; }
+
+  const ids = collectCheckedIds();
+  if(ids.length < 1){ showToast("Coche au moins 1 joueur."); return; }
+
+  ensureGroupsShape();
+  state.groups.push({
+    id: uid("G"),
+    name,
+    club,
+    playerIds: ids,
+    createdAt: new Date().toISOString()
+  });
+
+  showToast("Groupe sauvegardé ✅");
+  gName.value = "";
+  // si club vide, garde la saisie (souvent utile)
+  renderGroupsUI();
+}
+
+btnGroups?.addEventListener("click", openGroups);
+groupsBack?.addEventListener("click", closeGroups);
+groupsCancel?.addEventListener("click", closeGroups);
+groupsOverlay?.addEventListener("click", (e)=>{ if(e.target===groupsOverlay) closeGroups(); });
+
+gFilterClub?.addEventListener("change", ()=>{
+  renderGroupsPlayersList();
+});
+
+gSelAll?.addEventListener("click", ()=>{
+  gPlayersList.querySelectorAll("input[data-gsel]").forEach(cb=> cb.checked = true);
+});
+gSelNone?.addEventListener("click", ()=>{
+  gPlayersList.querySelectorAll("input[data-gsel]").forEach(cb=> cb.checked = false);
+});
+groupsSave?.addEventListener("click", saveGroupNow);
+// patch renderGroupsUI to call renderGroupsPlayersList
+const _oldRenderGroupsUI = renderGroupsUI;
+renderGroupsUI = function(){
+  ensureGroupsShape();
+  const clubs = getClubs();
+  const prev = gFilterClub.value || "Tous";
+  gFilterClub.innerHTML = '<option value="Tous">Tous les clubs</option>' + clubs.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  gFilterClub.value = (["Tous", ...clubs].includes(prev)) ? prev : "Tous";
+  renderGroupsPlayersList();
+
+  // saved groups
+  gSavedList.innerHTML = "";
+  if(!state.groups.length){
+    gSavedList.innerHTML = '<div class="hint">Aucun groupe sauvegardé pour le moment.</div>';
+    return;
+  }
+  state.groups
+    .slice()
+    .sort((a,b)=> (a.club||"").localeCompare(b.club||"",'fr') || a.name.localeCompare(b.name,'fr'))
+    .forEach(g=>{
+      const row = document.createElement("div");
+      row.className = "playerChip";
+      row.innerHTML = `
+        <div class="left">
+          <div class="n">${escapeHtml(g.name)}</div>
+          <div class="m">${escapeHtml(g.club||"—")} • ${g.playerIds.length} joueur(s)</div>
+        </div>
+        <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end">
+          <button class="btn small ok" type="button" data-apply>Rappeler</button>
+          <button class="btn small" type="button" data-select>Sélectionner</button>
+          <button class="btn small danger" type="button" data-del>Supprimer</button>
+        </div>
+      `;
+      row.querySelector("[data-apply]").addEventListener("click", ()=>{
+        const ids = new Set(g.playerIds);
+        state.players.forEach(p=>{
+          if(p.statut !== "Actif"){ p.present = false; return; }
+          p.present = ids.has(p.id);
+        });
+        clearSelection();
+        renderPlayers();
+        if(state.lastTeams) generateTeams();
+        showToast(`Groupe rappelé: ${g.name}`);
+        closeGroups();
+      });
+      row.querySelector("[data-select]").addEventListener("click", ()=>{
+        const ids = new Set(g.playerIds);
+        state.players.forEach(p=> p.selected = ids.has(p.id));
+        renderPlayers();
+        showToast(`Sélection: ${g.name}`);
+        closeGroups();
+      });
+      row.querySelector("[data-del]").addEventListener("click", ()=>{
+        pwaConfirm(`Supprimer le groupe "${g.name}" ?`, ()=>{
+          state.groups = state.groups.filter(x=>x.id !== g.id);
+          showToast("Groupe supprimé.");
+          renderGroupsUI();
+        }); return;
+      });
+      gSavedList.appendChild(row);
+    });
+};
+
+
+/** ---------------------------
+ *  LOCAL SAVE/LOAD
+ *  --------------------------- */
+btnSaveLocal.addEventListener("click", ()=>{
+  const payload = { state, weights };
+  localStorage.setItem(KEY_LOCAL, JSON.stringify(payload));
+  showToast("Sauvé en local (avec pondérations).");
+});
+btnLoadLocal.addEventListener("click", ()=>{
+  const txt = localStorage.getItem(KEY_LOCAL);
+  if(!txt){ showToast("Aucune sauvegarde locale."); return; }
+  try{
+    const data = JSON.parse(txt);
+    if(data?.state?.players){
+      state = data.state;
+      state.players = state.players.map(ensurePlayerShape);
+    }
+    if(data?.weights) weights = data.weights;
+    showToast("Chargé (local).");
+    renderPlayers();
+    if(state.lastTeams){
+      // Re-lier les objets joueurs aux instances live de state.players
+      const playerMap = new Map(state.players.map(p=>[p.id, p]));
+      state.lastTeams.teams.forEach(t=>{
+        t.players = t.players.map(o=>({
+          ...o,
+          p: playerMap.get(o.p?.id) || o.p
+        })).filter(o=>o.p);
+      });
+      renderTeams(state.lastTeams);
+    }
+  }catch{
+    showToast("Sauvegarde locale corrompue.");
+  }
+});
+
+/** ---------------------------
+ *  RESET
+ *  --------------------------- */
+btnReset.addEventListener("click", ()=>{
+  pwaConfirm("Reset : revenir à l'exemple minimal ?", ()=>{
+    state = { players: structuredClone(defaultPlayers), lastTeams:null, skillConstraint: state.skillConstraint };
+    SEED = 1;
+    seedLabel.textContent = "1";
+    renderPlayers();
+    teamsEl.innerHTML = "";
+    gapTotal.textContent = "—";
+    gapAvg.textContent = "—";
+    showToast("Reset fait.");
+  }); return;
+});
+
+/** ---------------------------
+ *  REROLL / GENERATE
+ *  --------------------------- */
+btnGenerate.addEventListener("click", ()=>{
+  const doGen = () => { SEED = 1; seedLabel.textContent = "1"; generateTeams(); };
+  if(state.manualDragDone){
+    pwaConfirm("Tu as modifié les équipes manuellement. Re-générer va effacer ces changements.", doGen);
+  } else {
+    doGen();
+  }
+});
+btnReroll.addEventListener("click", ()=>{
+  const doReroll = () => { SEED += 1; seedLabel.textContent = String(SEED); generateTeams(); };
+  if(state.manualDragDone){
+    pwaConfirm("Tu as modifié les équipes manuellement. Re-générer va effacer ces changements.", doReroll);
+  } else {
+    doReroll();
+  }
+});
+
+/** ---------------------------
+ *  LISTENERS
+ *  --------------------------- */
+q.addEventListener("input", renderPlayers);
+filterStatus.addEventListener("change", renderPlayers);
+filterClub?.addEventListener("change", renderPlayers);
+profileSel.addEventListener("change", ()=>{
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+});
+
+/** ---------------------------
+ *  PONDÉRATIONS (UI)
+ *  --------------------------- */
+const weightsOverlay = $("weightsOverlay");
+const weightsBack = $("weightsBack");
+const weightsCancel = $("weightsCancel");
+const weightsSave = $("weightsSave");
+const weightsReset = $("weightsReset");
+const weightsList = $("weightsList");
+const weightsProfileLabel = $("weightsProfileLabel");
+
+let _weightsDraft = null;
+
+function openWeightsOverlay(){
+  const profileKey = profileSel.value || "global";
+  const base = weights[profileKey] || weights.global;
+
+  _weightsDraft = { profileKey, w: structuredClone(base) };
+  weightsProfileLabel.textContent = profileKey;
+
+  weightsList.innerHTML = "";
+  Object.keys(weights.global).forEach((k)=>{
+    const row = document.createElement("div");
+    row.className = "critRow";
+    row.dataset.key = k;
+
+    row.innerHTML = `
+      <div class="critLeft">
+        <b>${escapeHtml(CRIT_LABELS[k] || k)}</b>
+        <span>Poids (0.5 → 3.0 recommandé)</span>
+      </div>
+      <div class="critRight">
+        <button class="stepBtn" type="button" data-action="minus">−</button>
+        <div class="stepVal" data-role="val">1.0</div>
+        <button class="stepBtn" type="button" data-action="plus">+</button>
+      </div>
+    `;
+
+    const valEl = row.querySelector('[data-role="val"]');
+
+    const setVal = (v)=>{
+      v = Number(v);
+      if(!Number.isFinite(v)) v = 1;
+      v = Math.max(0, Math.min(5, v));
+      v = Math.round(v * 10) / 10;
+      _weightsDraft.w[k] = v;
+      valEl.textContent = v.toFixed(1);
+    };
+
+    setVal(_weightsDraft.w[k] ?? 1);
+
+    row.querySelector('[data-action="minus"]').addEventListener("click", ()=> setVal((_weightsDraft.w[k] ?? 1) - 0.1));
+    row.querySelector('[data-action="plus"]').addEventListener("click", ()=> setVal((_weightsDraft.w[k] ?? 1) + 0.1));
+
+    weightsList.appendChild(row);
+  });
+
+  weightsOverlay.classList.remove("hidden");
+  weightsOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeWeightsOverlay(){
+  weightsOverlay.classList.add("hidden");
+  weightsOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  _weightsDraft = null;
+}
+function saveWeightsOverlay(){
+  if(!_weightsDraft) return;
+  const { profileKey, w } = _weightsDraft;
+  weights[profileKey] = structuredClone(w);
+  showToast("Pondérations sauvegardées.");
+  closeWeightsOverlay();
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+}
+btnEditWeights.addEventListener("click", (e)=>{ e.preventDefault(); openWeightsOverlay(); });
+weightsBack.addEventListener("click", closeWeightsOverlay);
+weightsCancel.addEventListener("click", closeWeightsOverlay);
+weightsSave.addEventListener("click", saveWeightsOverlay);
+weightsReset.addEventListener("click", ()=>{
+  if(!_weightsDraft) return;
+  pwaConfirm("Reset : remettre les poids par défaut pour ce profil ?", ()=>{
+    const defaults = structuredClone({ global: weights.global, off: weights.off, def: weights.def });
+    const pk = _weightsDraft.profileKey;
+    _weightsDraft.w = structuredClone(defaults[pk] || defaults.global);
+    weightsList.querySelectorAll(".critRow").forEach(row=>{
+      const k = row.dataset.key;
+      const valEl = row.querySelector('[data-role="val"]');
+      const v = Number(_weightsDraft.w[k] ?? 1);
+      if(valEl) valEl.textContent = v.toFixed(1);
+    });
+    showToast("Reset effectué.");
+  }); return;
+});
+weightsOverlay.addEventListener("click", (e)=>{ if(e.target === weightsOverlay) closeWeightsOverlay(); });
+
+/** ---------------------------
+ *  CONTRAINTES COMPÉTENCES (UI)
+ *  --------------------------- */
+const btnSkillConstraints = $("btnSkillConstraints");
+const skillOverlay = $("skillOverlay");
+const skillBack = $("skillBack");
+const skillCancel = $("skillCancel");
+const skillSave = $("skillSave");
+const skillKey = $("skillKey");
+const skillThreshold = $("skillThreshold");
+const skillMaxPerTeam = $("skillMaxPerTeam");
+const skillHard = $("skillHard");
+
+state.skillConstraint = state.skillConstraint || { key:"attaque", threshold:8, maxPerTeam:1, hard:true };
+
+function openSkillOverlay(){
+  const sc = state.skillConstraint;
+  skillKey.value = sc.key;
+  skillThreshold.value = String(sc.threshold);
+  skillMaxPerTeam.value = String(sc.maxPerTeam);
+  skillHard.checked = !!sc.hard;
+  skillOverlay.classList.remove("hidden");
+  skillOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeSkillOverlay(){
+  skillOverlay.classList.add("hidden");
+  skillOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+function saveSkillOverlay(){
+  const hard = !!skillHard.checked;
+  let maxPerTeam = Math.max(0, Math.min(12, Number(skillMaxPerTeam.value || 1)));
+  if(hard && maxPerTeam === 0) maxPerTeam = 1;
+  state.skillConstraint = {
+    key: String(skillKey.value || "attaque"),
+    threshold: Math.max(1, Math.min(10, Number(skillThreshold.value || 8))),
+    maxPerTeam,
+    hard
+  };
+  showToast("Contraintes compétences sauvegardées.");
+  closeSkillOverlay();
+  if(state.lastTeams) generateTeams();
+}
+btnSkillConstraints.addEventListener("click", (e)=>{ e.preventDefault(); openSkillOverlay(); });
+skillBack.addEventListener("click", closeSkillOverlay);
+skillCancel.addEventListener("click", closeSkillOverlay);
+skillSave.addEventListener("click", saveSkillOverlay);
+skillOverlay.addEventListener("click", (e)=>{ if(e.target === skillOverlay) closeSkillOverlay(); });
+
+/** ---------------------------
+ *  NOTATION JOUEUR (UI)
+ *  --------------------------- */
+const rateOverlay = $("rateOverlay");
+const rateBack = $("rateBack");
+const rateCancel = $("rateCancel");
+const rateSave = $("rateSave");
+const rateReset = $("rateReset");
+const rateAll6 = $("rateAll6");
+
+const rateName = $("rateName");
+const rateMeta = $("rateMeta");
+const rateHeaderSub = $("rateHeaderSub");
+
+const rateGlobalBadge = $("rateGlobalBadge");
+const rateLevelBadge = $("rateLevelBadge");
+const rateAvg = $("rateAvg");
+const rateComment = $("rateComment");
+const criteriaList = $("criteriaList");
+const rateLevelManual = $("rateLevelManual");
+
+let _ratePlayerRef = null;
+let _rateDraft = null;
+let _rateDirty = false;
+function setRateDirty(v=true){ _rateDirty = !!v; }
+
+function refreshRatingKPIs(){
+  if(!_rateDraft) return;
+  const g = avg10(_rateDraft.notes);
+  rateAvg.textContent = g.toFixed(2);
+  const lvl = (_rateDraft.levelManual && _rateDraft.levelManual!=="auto")
+    ? _rateDraft.levelManual
+    : autoLevelFromGlobal(g);
+  rateGlobalBadge.textContent = `Global: ${g.toFixed(2)} / 10`;
+  rateLevelBadge.textContent = `Niveau: ${lvl}`;
+}
+function openRating(player){
+  _ratePlayerRef = player;
+  _rateDraft = {
+    notes: structuredClone(player.notes || {}),
+    comment: String(player.comment || ""),
+    levelManual: String(player.levelManual || "auto")
+  };
+  _rateDirty = false;
+
+  const fullName = `${player.prenom || ""} ${player.nom || ""}`.trim() || "Joueur";
+  rateName.textContent = fullName;
+  rateMeta.textContent = `${player.poste} • ${player.taille}cm • ${player.sexe} • ${player.statut}`;
+  rateHeaderSub.textContent = `${player.poste} • ${player.taille}cm`;
+
+  rateComment.value = _rateDraft.comment;
+  rateComment.oninput = ()=>setRateDirty(true);
+  rateLevelManual.value = _rateDraft.levelManual;
+
+  criteriaList.innerHTML = "";
+  CRIT_KEYS.forEach((k)=>{
+    const row = document.createElement("div");
+    row.className = "critRow";
+    row.dataset.key = k;
+    row.innerHTML = `
+      <div class="critLeft">
+        <b>${escapeHtml(CRIT_LABELS[k] || k)}</b>
+        <span>${escapeHtml(CRIT_HELP[k] || "")}</span>
+      </div>
+      <div class="critRight">
+        <button class="stepBtn" type="button" data-action="minus">−</button>
+        <div class="stepVal" data-role="val">6</div>
+        <button class="stepBtn" type="button" data-action="plus">+</button>
+      </div>
+    `;
+    const valEl = row.querySelector('[data-role="val"]');
+
+    const setVal = (v)=>{
+      v = Number(v);
+      if(!Number.isFinite(v)) v = 6;
+      v = Math.max(1, Math.min(10, v));
+      _rateDraft.notes[k] = v;
+      valEl.textContent = String(v);
+      setRateDirty(true);
+      refreshRatingKPIs();
+    };
+
+    setVal(_rateDraft.notes[k] ?? 6);
+    row.querySelector('[data-action="minus"]').addEventListener("click", ()=> setVal((Number(_rateDraft.notes[k] ?? 6) - 1)));
+    row.querySelector('[data-action="plus"]').addEventListener("click", ()=> setVal((Number(_rateDraft.notes[k] ?? 6) + 1)));
+
+    criteriaList.appendChild(row);
+  });
+
+  refreshRatingKPIs();
+
+  rateOverlay.classList.remove("hidden");
+  rateOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeRating(){
+  rateOverlay.classList.add("hidden");
+  rateOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  _ratePlayerRef = null;
+  _rateDraft = null;
+}
+function saveRating(){
+  if(!_ratePlayerRef || !_rateDraft) return;
+  _ratePlayerRef.notes = structuredClone(_rateDraft.notes);
+  _ratePlayerRef.comment = String(rateComment.value || "").trim();
+  _ratePlayerRef.levelManual = String(rateLevelManual.value || "auto");
+  ensurePlayerShape(_ratePlayerRef);
+  showToast("Notes sauvegardées.");
+  _rateDirty = false;
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+  closeRating();
+}
+
+rateBack.addEventListener("click", ()=>{ if(!_rateDirty){ closeRating(); } else { pwaConfirm("Quitter sans sauvegarder ?", closeRating); } });
+rateCancel.addEventListener("click", ()=>{ if(!_rateDirty){ closeRating(); } else { pwaConfirm("Annuler les changements ?", closeRating); } });
+rateOverlay.addEventListener("click", (e)=>{ if(e.target === rateOverlay){ if(!_rateDirty){ closeRating(); } else { pwaConfirm("Quitter sans sauvegarder ?", closeRating); } } });
+rateSave.addEventListener("click", saveRating);
+rateAll6.addEventListener("click", ()=>{
+  if(!_rateDraft) return;
+  CRIT_KEYS.forEach(k => _rateDraft.notes[k] = 6);
+  setRateDirty(true);
+  criteriaList.querySelectorAll(".critRow").forEach(row=>{
+    const k = row.dataset.key;
+    const valEl = row.querySelector('[data-role="val"]');
+    if(valEl) valEl.textContent = String(_rateDraft.notes[k] ?? 6);
+  });
+  refreshRatingKPIs();
+});
+rateReset.addEventListener("click", ()=>{
+  if(!_ratePlayerRef || !_rateDraft) return;
+  pwaConfirm("Reset : remettre ce joueur à 6 partout (et vider le commentaire) ?", ()=>{
+    CRIT_KEYS.forEach(k => _rateDraft.notes[k] = 6);
+    rateComment.value = "";
+    setRateDirty(true);
+    criteriaList.querySelectorAll(".critRow").forEach(row=>{
+      const k = row.dataset.key;
+      const valEl = row.querySelector('[data-role="val"]');
+      if(valEl) valEl.textContent = String(_rateDraft.notes[k] ?? 6);
+    });
+    refreshRatingKPIs();
+  }); return;
+});
+rateLevelManual.addEventListener("change", ()=>{
+  if(!_rateDraft) return;
+  _rateDraft.levelManual = String(rateLevelManual.value||"auto");
+  setRateDirty(true);
+  refreshRatingKPIs();
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && !rateOverlay.classList.contains("hidden")){
+    if(!_rateDirty){ closeRating(); } else { pwaConfirm("Quitter sans sauvegarder ?", closeRating); }
+  }
+});
+
+/** ---------------------------
+ *  AJOUT / ÉDITION JOUEUR (UI)
+ *  --------------------------- */
+let _editPlayerRef = null;
+let _playerDirty = false;
+function setPlayerDirty(v=true){ _playerDirty = !!v; }
+
+function nextPlayerId(players = state.players){
+  let max = 0;
+  for(const p of players){
+    const m = String(p.id || "").match(/^J(\d+)$/i);
+    if(m){
+      const n = Number(m[1]);
+      if(Number.isFinite(n)) max = Math.max(max, n);
+    }
+  }
+  const next = max + 1;
+  return "J" + String(next).padStart(3, "0");
+}
+
+function openPlayerForm(mode, player){
+  _editPlayerRef = (mode === "edit") ? player : null;
+
+  playerHeaderTitle.textContent = (mode === "edit") ? "Modifier un joueur" : "Ajouter un joueur";
+  playerHeaderSub.textContent = (mode === "edit") ? "Modifie l’identité / poste / statut / niveau" : "Créer une fiche joueur";
+
+  if(mode === "edit" && player){
+    pPrenom.value = player.prenom || "";
+    pNom.value = player.nom || "";
+    pSexe.value = player.sexe || "Femme";
+    pTaille.value = String(player.taille || 175);
+    pPoste.value = player.poste || "non défini";
+    pStatut.value = player.statut || "Actif";
+    pNiveau.value = String(player.levelManual || "auto");
+    pPresent.value = player.present ? "1" : "0";
+    pClub.value = (Array.isArray(player.clubs) ? player.clubs.join(", ") : String(player.club||""));
+    playerDelete.style.display = "inline-block";
+    // Render incompatibility tags
+    setTimeout(()=>{ if(window._renderIncompatTags) window._renderIncompatTags(); }, 0);
+  }else{
+    pPrenom.value = "";
+    pNom.value = "";
+    pSexe.value = "Femme";
+    pTaille.value = "175";
+    pPoste.value = "non défini";
+    pStatut.value = "Actif";
+    pNiveau.value = "auto";
+    pPresent.value = "0";
+    // pré-remplis avec le filtre club courant si besoin
+    const fc = (filterClub?.value || "Tous");
+    pClub.value = (fc && fc !== "Tous") ? fc : "";
+    playerDelete.style.display = "none";
+  }
+
+  // reset dirty + watch changes
+  _playerDirty = false;
+  const watchIds = ["pPrenom","pNom","pSexe","pTaille","pPoste","pStatut","pNiveau","pPresent","pClub"];
+  watchIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(el._tbvWatched) return;
+    el._tbvWatched = true;
+    el.addEventListener("input", ()=>setPlayerDirty(true));
+    el.addEventListener("change", ()=>setPlayerDirty(true));
+  });
+  playerOverlay.classList.remove("hidden");
+  playerOverlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closePlayerForm(){
+  playerOverlay.classList.add("hidden");
+  playerOverlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  _editPlayerRef = null;
+}
+function savePlayerForm(){
+  const prenom = (pPrenom.value || "").trim();
+  const nom = (pNom.value || "").trim();
+  const sexe = (pSexe.value || "Autre").trim();
+  const taille = Number(pTaille.value || 0);
+  const poste = (pPoste.value || "non défini").trim();
+  const statut = (pStatut.value || "Actif").trim();
+  const levelManual = String(pNiveau.value || "auto");
+  const present = (String(pPresent.value) === "1");
+  const clubsRaw = (pClub?.value || "").trim();
+  const clubs = Array.from(new Set(clubsRaw.split(",").map(s=>s.trim()).filter(Boolean)));
+
+  if(!prenom){
+    showToast("Prénom obligatoire."); pPrenom.focus(); return;
+  }
+  if(!Number.isFinite(taille) || taille < 120 || taille > 230){
+    showToast("Taille invalide (120–230)."); pTaille.focus(); return;
+  }
+
+  if(_editPlayerRef){
+    _editPlayerRef.prenom = prenom;
+    _editPlayerRef.nom = nom;
+    _editPlayerRef.sexe = sexe;
+    _editPlayerRef.taille = taille;
+    _editPlayerRef.poste = poste;
+    _editPlayerRef.statut = statut;
+    _editPlayerRef.levelManual = levelManual;
+    _editPlayerRef.present = present;
+    _editPlayerRef.clubs = clubs;
+    _editPlayerRef.club = clubs[0] || "";
+    ensurePlayerShape(_editPlayerRef);
+    showToast("Joueur modifié.");
+  _playerDirty = false;
+  }else{
+    const id = nextPlayerId();
+    const newP = mkPlayer(id, prenom, nom, sexe, taille, poste, statut);
+    newP.levelManual = levelManual;
+    newP.present = present;
+    newP.clubs = clubs;
+    newP.club = clubs[0] || "";
+    ensurePlayerShape(newP);
+    state.players.push(newP);
+    showToast(`Joueur ajouté: ${prenom}.`);
+    _playerDirty = false;
+
+    // ✅ demandée : noter tout de suite après création
+    renderPlayers();
+    if(state.lastTeams) generateTeams();
+    closePlayerForm();
+    openRating(newP);
+    return;
+  }
+
+  renderPlayers();
+  if(state.lastTeams) generateTeams();
+  closePlayerForm();
+}
+
+playerBack.addEventListener("click", ()=>{ if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Quitter sans enregistrer ?", closePlayerForm); } });
+playerCancel.addEventListener("click", ()=>{ if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Annuler les changements ?", closePlayerForm); } });
+playerOverlay.addEventListener("click", (e)=>{ if(e.target === playerOverlay){ if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Quitter sans enregistrer ?", closePlayerForm); } } });
+playerSave.addEventListener("click", savePlayerForm);
+playerDelete.addEventListener("click", ()=>{
+  if(!_editPlayerRef) return;
+  pwaConfirm("Supprimer ce joueur ?", ()=>{
+    state.players = state.players.filter(p => p !== _editPlayerRef);
+    showToast("Joueur supprimé.");
+    renderPlayers();
+    if(state.lastTeams) generateTeams();
+    closePlayerForm();
+  }); return;
+});
+btnAddPlayer.addEventListener("click", ()=> openPlayerForm("add"));
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && !playerOverlay.classList.contains("hidden")){
+    if(!_playerDirty){ closePlayerForm(); } else { pwaConfirm("Quitter sans enregistrer ?", closePlayerForm); }
+  }
+});
+
+/** ---------------------------
+ *  NAV ACTIONS
+ *  --------------------------- */
+
+/** ---------------------------
+ *  INIT
+ *  --------------------------- */
+(function init(){
+
+  // PWA: service worker (offline + install)
+  try{
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', ()=>{
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+    }
+  }catch{}
+
+  // thème
+  try{ applyTheme(localStorage.getItem(KEY_THEME) || "dark"); }catch{}
+
+  renderPlayers();
+  seedLabel.textContent = String(SEED);
+  showToast("Prêt. Utilise ✎ pour éditer, Noter pour les 10 critères, et Import CSV pour remplir en lot.");
+})();
+
+/* ══════════════════════════════════════════════════════════
+   MODE TERRAIN
+══════════════════════════════════════════════════════════ */
+(function(){
+  function initTerrain(){
+  const overlay   = document.getElementById("terrainOverlay");
+  const slider    = document.getElementById("terrainSlider");
+  const dotsEl    = document.getElementById("terrainDots");
+  const closeBtn  = document.getElementById("terrainClose");
+  const teamsArea = document.getElementById("teams");
+
+  let currentIdx = 0;
+  let slides = [];
+
+  function getLevelClass(level){
+    const l = (level||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(l === "fort") return "fort";
+    if(l === "intermediaire") return "inter";
+    return "deb";
+  }
+  function getLevelLabel(level){
+    const l = (level||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    if(l === "fort") return "Fort";
+    if(l === "intermediaire") return "Inter";
+    return "Déb";
+  }
+
+  function openTerrain(){
+    if(!state.lastTeams || !state.lastTeams.teams.length) return;
+    const teams = state.lastTeams.teams;
+    slider.innerHTML = "";
+    dotsEl.innerHTML = "";
+    slides = [];
+    currentIdx = 0;
+
+    // Create track wrapper
+    const track = document.createElement("div");
+    track.className = "terrain-track";
+    track.id = "terrainTrack";
+    slider.appendChild(track);
+
+    teams.forEach((t, i) => {
+      const slide = document.createElement("div");
+      slide.className = "terrain-slide";
+      slide.dataset.team = t.name;
+
+      const playersHtml = t.players
+        .slice().sort((a,b) => b.sc - a.sc)
+        .map(o => {
+          const lvCls   = getLevelClass(o.level);
+          const lvLabel = getLevelLabel(o.level);
+          const poste   = (o.p.poste && o.p.poste !== "non défini") ? o.p.poste : "";
+          return `<div class="terrain-player">
+            <div class="terrain-player-name">${escapeHtml(o.p.prenom)} ${escapeHtml(o.p.nom||"")}</div>
+            ${poste ? `<span class="terrain-player-poste">${escapeHtml(poste)}</span>` : ""}
+            <span class="terrain-player-level ${lvCls}">${lvLabel}</span>
+          </div>`;
+        }).join("");
+
+      slide.innerHTML = `
+        <div class="terrain-team-name">${escapeHtml(t.name)}</div>
+        <div class="terrain-team-count">${t.players.length} joueur${t.players.length>1?"s":""}</div>
+        <div class="terrain-players">${playersHtml}</div>`;
+
+      track.appendChild(slide);
+      slides.push(slide);
+
+      // Dot
+      const dot = document.createElement("div");
+      dot.className = "terrain-dot" + (i===0?" active":"");
+      dot.addEventListener("click", ()=> goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+    renderSlide(0);
+  }
+
+  function closeTerrain(){
+    overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  function renderSlide(idx){
+    currentIdx = Math.max(0, Math.min(idx, slides.length-1));
+    const track = document.getElementById("terrainTrack");
+    if(track) track.style.transform = `translateX(${-currentIdx * 100}%)`;
+    dotsEl.querySelectorAll(".terrain-dot").forEach((d,i)=>{
+      d.classList.toggle("active", i===currentIdx);
+    });
+  }
+
+  function goTo(idx){ renderSlide(idx); }
+  function prev(){ if(currentIdx > 0) renderSlide(currentIdx-1); }
+  function next(){ if(currentIdx < slides.length-1) renderSlide(currentIdx+1); }
+
+  closeBtn.addEventListener("click", closeTerrain);
+
+  // ── Swipe horizontal inside overlay ──────────────────────
+  let txStart = 0, txStartY = 0, txDragging = false;
+  slider.addEventListener("touchstart", e=>{
+    txStart  = e.touches[0].clientX;
+    txStartY = e.touches[0].clientY;
+    txDragging = true;
+  }, {passive:true});
+  slider.addEventListener("touchend", e=>{
+    if(!txDragging) return;
+    txDragging = false;
+    const dx = e.changedTouches[0].clientX - txStart;
+    const dy = e.changedTouches[0].clientY - txStartY;
+    if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40){
+      dx < 0 ? next() : prev();
+    }
+    // Swipe down → close
+    if(dy > 80 && Math.abs(dy) > Math.abs(dx)*1.5) closeTerrain();
+  }, {passive:true});
+
+  // Keyboard arrows
+  document.addEventListener("keydown", e=>{
+    if(!overlay.classList.contains("active")) return;
+    if(e.key==="ArrowRight") next();
+    if(e.key==="ArrowLeft")  prev();
+    if(e.key==="Escape")     closeTerrain();
+  });
+
+  // ── Swipe UP from teams area to open terrain ─────────────
+  let upStartY = 0, upStartX = 0;
+  document.addEventListener("touchstart", e=>{
+    if(overlay.classList.contains("active")) return;
+    upStartY = e.touches[0].clientY;
+    upStartX = e.touches[0].clientX;
+  }, {passive:true});
+  document.addEventListener("touchend", e=>{
+    if(overlay.classList.contains("active")) return;
+    const dy = e.changedTouches[0].clientY - upStartY;
+    const dx = e.changedTouches[0].clientX - upStartX;
+    if(dy < -80 && Math.abs(dy) > Math.abs(dx)*1.5){
+      // Only if touch started within or below the teams area
+      const rect = teamsArea.getBoundingClientRect();
+      if(upStartY >= rect.top - 60) openTerrain();
+    }
+  }, {passive:true});
+
+  // Expose for potential external call
+  window.openTerrainMode = openTerrain;
+  } // end initTerrain
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", initTerrain);
+  } else {
+    initTerrain();
+  }
+})();
+
+/* ══════════════════════════════════════════════════════════
+   PARTAGE DES ÉQUIPES
+══════════════════════════════════════════════════════════ */
+function buildShareText(){
+  if(!state.lastTeams || !state.lastTeams.teams.length) return null;
+  const lines = [];
+  const date = new Date().toLocaleDateString("fr-FR", {day:"2-digit", month:"2-digit"});
+  lines.push("🏐 Équipes du " + date);
+  lines.push("");
+
+  state.lastTeams.teams.forEach(t => {
+    const players = t.players
+      .slice().sort((a,b) => b.sc - a.sc)
+      .map(o => {
+        const prenom = o.p.prenom || "";
+        const nom    = o.p.nom    || "";
+        const poste  = (o.p.poste && o.p.poste !== "non défini") ? " (" + o.p.poste + ")" : "";
+        return (prenom + " " + nom).trim() + poste;
+      });
+
+    // Ligne compacte : "Équipe A : Jean Dupont (Passeur), Marie Martin, ..."
+    lines.push("Équipe " + t.name + " : " + players.join(", "));
+  });
+
+  return lines.join("\n");
+}
+
+async function doShare(){
+  const text = buildShareText();
+  if(!text){ showToast("Génère d'abord les équipes.", "warn"); return; }
+
+  // Web Share API si dispo (mobile natif)
+  if(navigator.share){
+    try{
+      await navigator.share({ title:"Équipes volley", text });
+      return;
+    }catch(e){ /* annulé ou non supporté */ }
+  }
+
+  // Fallback : presse-papier
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast("✅ Équipes copiées dans le presse-papier !", "ok");
+  }catch(e){
+    // Dernier recours : textarea select
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-999px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    showToast("✅ Équipes copiées !", "ok");
+  }
+}
+
+// Bouton dans la vue résultats
+document.getElementById("btnShare")?.addEventListener("click", doShare);
+
+// Bouton dans le mode terrain (initialisé après DOM)
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.getElementById("btnShareTerrain")?.addEventListener("click", doShare);
+});
+
+// Afficher/masquer le bouton partage avec les équipes
+const _origRenderTeams = window._origRenderTeams;
+(()=>{
+  const shareRow = document.getElementById("shareRow");
+  if(!shareRow) return;
+  // Observer : affiche shareRow quand teams est peuplé
+  const observer = new MutationObserver(()=>{
+    const hasTeams = document.querySelector("#teams .teamCard");
+    shareRow.style.display = hasTeams ? "block" : "none";
+  });
+  const teamsEl2 = document.getElementById("teams");
+  if(teamsEl2) observer.observe(teamsEl2, {childList:true});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   HISTORIQUE DES GÉNÉRATIONS
+══════════════════════════════════════════════════════════ */
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(KEY_HISTORY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveHistory(hist){
+  try{ localStorage.setItem(KEY_HISTORY, JSON.stringify(hist)); }catch(e){}
+}
+
+function pushHistory(payload){
+  if(!payload || !payload.teams || !payload.teams.length) return;
+  const hist = loadHistory();
+  const entry = {
+    ts: Date.now(),
+    teamSizes: payload.teamSizes,
+    numPlayers: payload.teams.reduce((s,t)=>s+t.players.length, 0),
+    teams: payload.teams.map(t=>({
+      name: t.name,
+      players: t.players.map(o=>({
+        p: { id:o.p.id, prenom:o.p.prenom, nom:o.p.nom, poste:o.p.poste,
+             taille:o.p.taille, sexe:o.p.sexe, levelManual:o.p.levelManual, notes:o.p.notes },
+        sc: o.sc, level: o.level
+      })),
+      total: t.total, avg: t.avg, target: t.target, counts: {...t.counts}
+    })),
+    bench: (payload.bench||[]).map(o=>({
+      p: { id:o.p.id, prenom:o.p.prenom, nom:o.p.nom },
+      sc: o.sc, level: o.level
+    }))
+  };
+  hist.unshift(entry);
+  saveHistory(hist.slice(0, MAX_HISTORY));
+}
+
+function openHistory(){
+  const hist = loadHistory();
+  const listEl = document.getElementById("historyList");
+  listEl.innerHTML = "";
+
+  if(!hist.length){
+    listEl.innerHTML = '<div class="hint" style="text-align:center;padding:20px">Aucune génération enregistrée.</div>';
+  } else {
+    hist.forEach((entry, idx) => {
+      const date = new Date(entry.ts);
+      const dateStr = date.toLocaleDateString("fr-FR", {day:"2-digit",month:"2-digit",year:"2-digit"});
+      const timeStr = date.toLocaleTimeString("fr-FR", {hour:"2-digit",minute:"2-digit"});
+      const format  = (entry.teamSizes||[]).join(",") || "?";
+      const nbPlayers = entry.numPlayers || "?";
+
+      const teamPills = (entry.teams||[]).map(t=>
+        `<span class="history-team-pill">${escapeHtml(t.name)}: ${t.players.length}j</span>`
+      ).join("");
+
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `
+        <div class="history-item-info">
+          <div class="history-item-date">${dateStr} à ${timeStr}</div>
+          <div class="history-item-meta">${nbPlayers} joueurs · Format ${escapeHtml(format)}</div>
+          <div class="history-item-teams">${teamPills}</div>
+        </div>
+        <button class="btn small ok" data-idx="${idx}" type="button">Restaurer</button>`;
+
+      item.querySelector("button").addEventListener("click", ()=>{
+        restoreHistory(entry);
+        closeHistory();
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById("historyOverlay").classList.remove("hidden");
+  document.getElementById("historyOverlay").setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeHistory(){
+  document.getElementById("historyOverlay").classList.add("hidden");
+  document.getElementById("historyOverlay").setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+
+function restoreHistory(entry){
+  if(!entry || !entry.teams) return;
+  // Re-lier les joueurs aux instances live de state.players
+  const playerMap = new Map(state.players.map(p=>[p.id, p]));
+  const teams = entry.teams.map(t=>({
+    ...t,
+    players: t.players.map(o=>({
+      ...o,
+      p: playerMap.get(o.p?.id) || o.p
+    })).filter(o=>o.p)
+  }));
+  const payload = { teams, bench: entry.bench||[], teamSizes: entry.teamSizes||[] };
+  state.lastTeams = payload;
+  saveAll();
+  renderTeams(payload);
+  showToast("Génération restaurée ✅", "ok");
+}
+
+document.getElementById("btnHistory")?.addEventListener("click", openHistory);
+// historyBack est dans le HTML après le script → attendre le DOM
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", ()=>{
+    document.getElementById("historyBack")?.addEventListener("click", closeHistory);
+  });
+} else {
+  document.getElementById("historyBack")?.addEventListener("click", closeHistory);
+}
+
+/* ══════════════════════════════════════════════════════════
+   INCOMPATIBILITÉS
+══════════════════════════════════════════════════════════ */
+
+// ── Helpers ──────────────────────────────────────────────
+function addIncompat(idA, idB){
+  const pA = state.players.find(p=>p.id===idA);
+  const pB = state.players.find(p=>p.id===idB);
+  if(!pA||!pB||idA===idB) return;
+  if(!Array.isArray(pA.incompatibles)) pA.incompatibles=[];
+  if(!Array.isArray(pB.incompatibles)) pB.incompatibles=[];
+  if(!pA.incompatibles.includes(idB)) pA.incompatibles.push(idB);
+  if(!pB.incompatibles.includes(idA)) pB.incompatibles.push(idA);
+}
+function removeIncompat(idA, idB){
+  const pA = state.players.find(p=>p.id===idA);
+  const pB = state.players.find(p=>p.id===idB);
+  if(pA) pA.incompatibles = (pA.incompatibles||[]).filter(x=>x!==idB);
+  if(pB) pB.incompatibles = (pB.incompatibles||[]).filter(x=>x!==idA);
+}
+function playerName(p){ return (p.prenom+" "+(p.nom||"")).trim(); }
+
+// ── Dans la fiche joueur : autocomplete + tags ────────────
+function initIncompatForm(){
+  const input    = document.getElementById("incompatInput");
+  const dropdown = document.getElementById("incompatDropdown");
+  const list     = document.getElementById("incompatList");
+  if(!input) return;
+
+  function renderTags(){
+    if(!_editPlayerRef) return;
+    list.innerHTML = "";
+    (_editPlayerRef.incompatibles||[]).forEach(id=>{
+      const other = state.players.find(p=>p.id===id);
+      if(!other) return;
+      const tag = document.createElement("span");
+      tag.style.cssText = "display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;background:rgba(187,107,217,.2);border:1px solid rgba(187,107,217,.4);font-size:12px;";
+      tag.innerHTML = `🚫 ${escapeHtml(playerName(other))} <button type="button" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0;line-height:1" data-id="${id}">×</button>`;
+      tag.querySelector("button").addEventListener("click", ()=>{
+        removeIncompat(_editPlayerRef.id, id);
+        renderTags();
+        saveAll();
+      });
+      list.appendChild(tag);
+    });
+  }
+
+  input.addEventListener("input", ()=>{
+    const q = normalizeName(input.value);
+    dropdown.innerHTML = "";
+    if(!q || !_editPlayerRef){ dropdown.style.display="none"; return; }
+    const matches = state.players.filter(p=>
+      p.id !== _editPlayerRef.id &&
+      !(_editPlayerRef.incompatibles||[]).includes(p.id) &&
+      normalizeName(playerName(p)).includes(q)
+    ).slice(0,8);
+    if(!matches.length){ dropdown.style.display="none"; return; }
+    matches.forEach(p=>{
+      const row = document.createElement("div");
+      row.style.cssText = "padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13px;";
+      row.textContent = playerName(p) + " · " + getPlayerLevel(p);
+      row.addEventListener("mousedown", e=>{ e.preventDefault();
+        addIncompat(_editPlayerRef.id, p.id);
+        input.value = "";
+        dropdown.style.display = "none";
+        renderTags();
+        saveAll();
+      });
+      dropdown.appendChild(row);
+    });
+    dropdown.style.display = "block";
+  });
+
+  document.addEventListener("click", e=>{
+    if(!e.target.closest("#incompatSearch")) dropdown.style.display="none";
+  });
+
+  // Expose renderTags so openPlayerForm can call it
+  window._renderIncompatTags = renderTags;
+}
+
+// Call once DOM ready
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded", initIncompatForm);
+} else {
+  initIncompatForm();
+}
+
+// ── Écran dédié ──────────────────────────────────────────
+function openIncompat(){
+  const el = document.getElementById("incompatOverlay");
+  const listEl = document.getElementById("incompatGlobalList");
+  listEl.innerHTML = "";
+
+  // Collect all pairs (avoid duplicates)
+  const seen = new Set();
+  const pairs = [];
+  state.players.forEach(p=>{
+    (p.incompatibles||[]).forEach(id=>{
+      const key = [p.id,id].sort().join("|");
+      if(!seen.has(key)){
+        seen.add(key);
+        const other = state.players.find(x=>x.id===id);
+        if(other) pairs.push([p, other]);
+      }
+    });
+  });
+
+  if(!pairs.length){
+    listEl.innerHTML = '<div class="hint" style="text-align:center;padding:20px">Aucune incompatibilité définie.</div>';
+  } else {
+    pairs.forEach(([pA, pB])=>{
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `
+        <div class="history-item-info">
+          <div class="history-item-date">🚫 ${escapeHtml(playerName(pA))} <span style="color:var(--muted)">avec</span> ${escapeHtml(playerName(pB))}</div>
+          <div class="history-item-meta">${escapeHtml(getPlayerLevel(pA))} · ${escapeHtml(pA.poste||"non défini")} &nbsp;—&nbsp; ${escapeHtml(getPlayerLevel(pB))} · ${escapeHtml(pB.poste||"non défini")}</div>
+        </div>
+        <button class="btn small bad" type="button">Retirer</button>`;
+      item.querySelector("button").addEventListener("click", ()=>{
+        removeIncompat(pA.id, pB.id);
+        saveAll();
+        openIncompat(); // refresh
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  el.classList.remove("hidden");
+  el.setAttribute("aria-hidden","false");
+  document.body.style.overflow="hidden";
+}
+function closeIncompat(){
+  document.getElementById("incompatOverlay").classList.add("hidden");
+  document.getElementById("incompatOverlay").setAttribute("aria-hidden","true");
+  document.body.style.overflow="";
+}
+
+document.getElementById("btnIncompat")?.addEventListener("click", openIncompat);
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded", ()=>{
+    document.getElementById("incompatBack")?.addEventListener("click", closeIncompat);
+  });
+} else {
+  document.getElementById("incompatBack")?.addEventListener("click", closeIncompat);
+}
+</script>
+
+
+<!-- Custom Confirm Modal (PWA-safe, replaces native confirm()) -->
+<div id="tbvConfirm" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:#1a2030;border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px 20px;max-width:320px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:16px;">
+    <div id="tbvConfirmMsg" style="color:#fff;font-size:15px;text-align:center;line-height:1.5;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button id="tbvConfirmNo"  style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;cursor:pointer;">Annuler</button>
+      <button id="tbvConfirmYes" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e67e22;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INCOMPATIBILITÉS ══════════════════════════════════ -->
+<div class="rateOverlay hidden" id="incompatOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="incompatTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="incompatBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="incompatTitle">Incompatibilités</b>
+          <span>Joueurs qui ne peuvent pas être dans la même équipe</span>
+        </div>
+      </div>
+    </div>
+    <div class="rateBody">
+      <div id="incompatGlobalList" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HISTORIQUE DES GÉNÉRATIONS ══════════════════════ -->
+<div class="rateOverlay hidden" id="historyOverlay" aria-hidden="true">
+  <div class="rateSheet" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+    <div class="rateHeader">
+      <div class="left">
+        <button class="btn small ghost" id="historyBack" type="button">← Retour</button>
+        <div class="rateTitle">
+          <b id="historyTitle">Historique des générations</b>
+          <span>5 dernières — cliquer pour restaurer</span>
+        </div>
+      </div>
+    </div>
+    <div class="rateBody">
+      <div id="historyList" style="display:flex;flex-direction:column;gap:10px;padding:4px 0;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODE TERRAIN ══════════════════════════════════════ -->
+<div id="terrainOverlay" role="dialog" aria-label="Mode terrain">
+  <div class="terrain-hint"><span>← swipe →</span> entre équipes &nbsp;·&nbsp; swipe ↓ pour fermer</div>
+  <div style="position:absolute;top:14px;left:14px;z-index:10;">
+    <button class="btn small" id="btnShareTerrain" type="button" style="font-size:12px;padding:5px 10px;">📤</button>
+  </div>
+  <div class="terrain-slider" id="terrainSlider"></div>
+  <div class="terrain-dots" id="terrainDots"></div>
+  <button class="terrain-close" id="terrainClose" aria-label="Fermer">✕</button>
+</div>
+
+</body>
+</html>
