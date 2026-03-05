@@ -1,6 +1,6 @@
 /* TBV PWA Service Worker */
 
-const CACHE_NAME = "tbv-v4-pwa-3";
+const CACHE_NAME = "tbv-v4-pwa-4";
 
 const CORE_ASSETS = [
   "./",
